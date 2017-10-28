@@ -133,10 +133,11 @@ let init = async function() {
             },
         });
 
-        if (!songList.value) {
+        if (songList.value) {
+            res.send(true);
+        } else {
             res.send(false);
         }
-        res.send(true);
     }
 
     /**
@@ -146,18 +147,23 @@ let init = async function() {
      *  - userId
      */
     var getRemoveSong = async function(req, res) {
-        await parties.findAndModify({
+        let songList = await parties.findAndModify({
             'partyId': req.query.partyId,
+            'songs.songId': req.query.songId,
+            'songs.userId': req.query.userId,
         }, [], {
             '$pull': {
                 'songs': {
                     'songId': req.query.songId,
-                    'userId': req.query.userId,
                 }
             },
         });
 
-        res.send(true);
+        if (songList.value) {
+            res.send(true);
+        } else {
+            res.send(false);
+        }
     }
 
     /**
