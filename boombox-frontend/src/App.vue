@@ -1,8 +1,8 @@
 <template>
   <div id="app">
-    <router-link to="/">
-      <header><h1>📻 BOOMBox</h1></header>
-    </router-link>
+    <header>
+      <h1><router-link to="/">📻 BOOMBox</router-link></h1>
+    </header>
     <main><router-view></router-view></main>
     <footer>&copy; BOOMBox 2017</footer>
   </div>
@@ -36,6 +36,11 @@ header {
   margin: 0;
   padding: 10px 0;
   background-color: #f5f5f5;
+}
+
+header a {
+  color: #2c3e50 !important;
+  text-decoration: none !important;
 }
 
 header span {

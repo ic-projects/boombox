@@ -10,6 +10,7 @@ import AsyncComputed from 'vue-async-computed'
 import axios from 'axios'
 import VueAxios from 'vue-axios'
 
+Vue.use(require('vue-moment'))
 Vue.use(VueAxios, axios)
 Vue.use(AsyncComputed)
 Vue.config.productionTip = false
