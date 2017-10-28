@@ -98,12 +98,15 @@ let init = async function() {
    *  - partyId
    */
   var getNextSong = async function(req, res) {
-  	let songList = await parties.findOne({
+  	let nextSong = await parties.findOne({
   		'partyId': req.query.partyId,
   	}, {
-  		'fields': { nextSong: 1, nextSongStartTime: 1 }
+  		'fields': {
+  			'nextSong': 1,
+  			'nextSongStartTime': 1,
+  		},
   	});
-  	res.send(songList);
+  	res.send(nextSong);
   }
 
   /**
@@ -113,10 +116,11 @@ let init = async function() {
    *  - userId
    */
   var getAddSong = async function(req, res) {
-  	// TODO: Don't allow the same song to be added twice?
-
-  	await parties.findAndModify({
+  	let songList = await parties.findAndModify({
   		'partyId': req.query.partyId,
+  		'songs.songId': {
+  			'$ne': req.query.songId
+  		},
   	}, [], {
   		'$push': { 
   			'songs': {
@@ -124,9 +128,12 @@ let init = async function() {
   				'userId': req.query.userId,
   				'voterIds': [],
   			}
-  		}
+  		},
   	});
 
+  	if (!songList.value) {
+  		res.send(false);
+  	}
   	res.send(true);
   }
 
@@ -145,7 +152,7 @@ let init = async function() {
   				'songId': req.query.songId,
   				'userId': req.query.userId,
   			}
-  		}
+  		},
   	});
 
   	res.send(true);
@@ -164,7 +171,7 @@ let init = async function() {
   	}, [], {
   		'$push': { 
   			'songs.$.voterIds': req.query.userId
-  		}
+  		},
   	});
 
   	res.send(true);
@@ -183,7 +190,7 @@ let init = async function() {
   	}, [], {
   		'$pull': { 
   			'songs.$.voterIds': req.query.userId
-  		}
+  		},
   	});
 
   	res.send(true);
