@@ -3,6 +3,7 @@ var http = require('http').Server(app);
 var MongoClient = require('mongodb').MongoClient;
 var co = require('co');
 var assert = require('assert');
+var uuid = require('uuid/v1');
 
 let init = async function() {
   // Setup MongoDB database
@@ -38,8 +39,13 @@ let init = async function() {
     res.send(newPartyId);
   }
 
+  var getJoinParty = async function(req, res) {
+    res.send(uuid());
+  }
+
   // Handle API calls
   app.get('/createParty', getCreateParty);
+  app.get('/joinParty', getJoinParty);
 }
 
 co(init).catch(function(err) {
