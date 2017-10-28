@@ -11,18 +11,25 @@ var path = require('path');
 var timesyncServer = require('timesync/server');
 app.use('/timesync', timesyncServer.requestHandler);
 
+var STARTOFNEXTSONG = undefined
+
 io.on("connection", function(client) {
     console.log("Client connection");
     client.on("join", function(data) {
         console.log("client join!");
+        if (STARTOFNEXTSONG != undefined) {
+            client.emit("getReady" {
+                nextSong: STARTOFNEXTSONG,
+                currentSong:STARTOFCURRENTSONG
+            })
+        }
     });
 });
 
 app.get('/sync', function(req, res) {
-    io.emit("getReady", {
-        time: (new Date().getTime()) + 15000
-    });
-    res.send(`30 seconds start now`);
+  STARTOFNEXTSONG = new Date().getTime() + 15000
+	io.emit("getReady", {time: STARTOFNEXTSONG})
+  res.send(`30 seconds start now`)
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
