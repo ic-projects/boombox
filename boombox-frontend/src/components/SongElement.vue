@@ -22,7 +22,7 @@
 <script>
 export default {
   name: 'SongElement',
-  props: ['song', 'playing', 'voteable'],
+  props: ['song', 'playing', 'voteable','uuid'],
   data () {
     return {
       voted: false
@@ -31,9 +31,17 @@ export default {
   methods: {
     vote () {
       if(this.voted) {
-        //TODO API CALL UNVOTE
+        this.axios.get("/voteSong?partyId=" + this.partyid +
+          "&songId="+this.song.url+ "&userId="+this.uuid)
+          .then(response => {
+            console.log("no yo")
+          })
       } else {
-        //TODO API CALL VOTE
+        this.axios.get("/voteSong?partyId=" + this.partyid +
+        "&songId="+this.song.url+ "&userId="+this.uuid)
+          .then(response => {
+            console.log("yo")
+          })
       }
       this.voted = !this.voted;
       console.log(this.voted)

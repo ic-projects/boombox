@@ -43,7 +43,11 @@ export default {
   methods: {
     createParty () {
     //TODO CALL createParty API then router push to party
-
+      this.axios.get("/createParty?name=" + this.partyName)
+        .then(response => {
+          let newPartyID = response.data
+          router.push("party/"+newPartyID);
+        })
 
     }
   }
