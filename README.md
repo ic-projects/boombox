@@ -1,7 +1,9 @@
 # Boombox
+
 Why use boombox?
 
 ## Installation
+
 ...
 
 
