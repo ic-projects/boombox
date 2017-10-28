@@ -11,6 +11,15 @@ var path = require('path');
 var timesyncServer = require('timesync/server');
 app.use('/timesync', timesyncServer.requestHandler);
 
+app.get('/testAudio', function(req, res) {
+    var requestUrl = 'https://www.youtube.com/watch?v=' + req.query.songId
+    try {
+        stream(requestUrl).pipe(res)
+    } catch (exception) {
+    res.status(500).send("Oops could not get the song")
+  }
+})
+
 var STARTOFNEXTSONG = undefined
 
 io.on("connection", function(client) {
@@ -18,18 +27,19 @@ io.on("connection", function(client) {
     client.on("join", function(data) {
         console.log("client join!");
         if (STARTOFNEXTSONG != undefined) {
-            client.emit("getReady" {
+            client.emit("getReady", {
                 nextSong: STARTOFNEXTSONG,
-                currentSong:STARTOFCURRENTSONG
             })
         }
     });
 });
 
+
 app.get('/sync', function(req, res) {
-  STARTOFNEXTSONG = new Date().getTime() + 15000
+    STARTOFNEXTSONG = new Date().getTime() + 15000
 	io.emit("getReady", {time: STARTOFNEXTSONG})
-  res.send(`30 seconds start now`)
+
+    res.send(`30 seconds start now`)
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
