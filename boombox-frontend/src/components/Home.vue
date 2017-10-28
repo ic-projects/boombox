@@ -1,26 +1,25 @@
 <template>
   <div>
-    <div class="container">
-      <h1 class="text-center">BOOMBox</h1>
-      <b-card class="text-center">
-        <h1 class="card-title">Join a party</h1>
-        <b-form-input v-model="partyid"
-                      type="text"
-                      placeholder="Enter a party code"></b-form-input>
-       <router-link :to="joinParty">
-         <b-button size="lg" variant="primary">Join</b-button>
-       </router-link>
-      </b-card>
-
-      <h3 class="text-center">or</h3>
-
-      <b-card class="text-center">
-        <h1 class="card-title">Create a party</h1>
-        <b-form-input v-model="partyName"
-                      type="text"
-                      placeholder="Enter a party name"></b-form-input>
-          <b-button @click="createParty" size="lg" variant="primary">Create</b-button>
-      </b-card>
+    <div class="container text-center">
+      <div class="row">
+        <div class="col-md-8 offset-md-2">
+          <b-card header="Join a Party"
+                  class="text-center">
+            <b-form @submit.prevent="joinParty">
+              <b-input-group>
+                <b-form-input v-model="partyid"
+                type="text"
+                placeholder="Enter a party ID"></b-form-input>
+                <b-input-group-button>
+                    <b-button type="submit" variant="primary">Join</b-button>
+                </b-input-group-button>
+              </b-input-group>
+            </b-form>
+          </b-card>
+        </div>
+      </div>
+      <br>
+      <router-link to="/create" id="join-party">Create a party!</router-link>
     </div>
   </div>
 </template>
@@ -30,25 +29,12 @@ export default {
   name: 'home',
   data () {
     return {
-      partyid: '',
-      partyName: '',
-      isCreatingParty: false
-    }
-  },
-  computed: {
-    joinParty () {
-      return "party/" + this.partyid;
+      partyid: ''
     }
   },
   methods: {
-    createParty () {
-    //TODO CALL createParty API then router push to party
-      this.axios.get("/createParty?name=" + this.partyName)
-        .then(response => {
-          let newPartyID = response.data
-          router.push("party/"+newPartyID);
-        })
-
+    joinParty () {
+      this.$router.push("party/" + this.partyid)
     }
   }
 }

@@ -1,21 +1,32 @@
 <template>
-  <div class="container">
-    <h1>Welcome to "{{ partyName }}" </h1>
-    <b-button>Become a speaker</b-button>
-    <div class="bd-content" v-if="playingNow">
-      Playing Now:
-      <SongElement :song="playingNow" :uuid="uuid" :voteable="false" :playing="true"></SongElement>
+  <div>
+    <div class="container text-center">
+      <h3>Welcome to {{ partyName }}</h3>
+      <br>
+      <ul class="list-group">
+        <SongElement :song="playingNow" :uuid="uuid" :voteable="false" :playing="true"></SongElement>
+        <SongElement :song="playingNext" :uuid="uuid" :voteable="false" :playing="false"></SongElement>
+      </ul>
+      <br>
+      <br>
+      <ul class="list-group" v-for="song in songqueue">
+        <li class="list-group-item list-header">Song List</li>
+        <SongElement :song="song" :uuid="uuid" :voteable="true" :playing="false"></SongElement>
+      </ul>
+      <br>
+      <b-form @submit.prevent="addSong">
+        <b-input-group>
+          <b-form-input type="text"
+                        v-model="songId"
+                        placeholder="Enter the YouTube ID"></b-form-input>
+          <b-input-group-button>
+              <b-button type="submit" variant="primary">Add Song</b-button>
+          </b-input-group-button>
+        </b-input-group>
+      </b-form>
+      <br>
+      <a href="#" @click="leaveParty" id="join-party">Leave a party!</a>
     </div>
-    <div class="bd-content" v-if="playingNext">
-      Playing Next:
-      <SongElement :song="playingNext" :uuid="uuid" :voteable="false" :playing="false"></SongElement>
-    </div>
-    Queue:
-    <ul v-for="song in songqueue">
-      <SongElement :song="song" :uuid="uuid" :voteable="true" :playing="false"></SongElement>
-    </ul>
-
-    <b-button @click="leaveParty">Leave Party</b-button>
   </div>
 </template>
 
@@ -32,14 +43,15 @@ export default {
     return {
       msg: 'Welcome to Your Vue.js PWA',
       uuid: '',
-      songqueue: [],
-      playingNext: {},
-      playingNow: {},
-      partyName: '',
-      isSpeaker: false
+      songqueue: [{url: "3M_5oYU-IsU", votes: 69}],
+      playingNext: {url: "3M_5oYU-IsU", votes: 69},
+      playingNow: {url: "4LfJnj66HVQ", votes: 420},
+      partyName: 'Nik\'s 31\'st Birthday',
+      isSpeaker: false,
+      songId: '',
     }
   },
-  method: {
+  methods: {
     leaveParty () {
       this.axios.get("/leaveParty?partyId=" + this.partyid)
         .then(response => {
@@ -52,12 +64,10 @@ export default {
           console.log(response.data)
         })
     },
-    joinParty () {
-      this.axios.get("/joinParty?partyId=" + this.partyid)
+    addSong () {
+      this.axios.get("/addSong?partyId=" + this.partyid + "&songId=" + this.songId + "&userId=" + this.uuid)
         .then(response => {
-          this.uuid = response.data
-          this.initSocket();
-          this.getSongList();
+          console.log(response.data)
         })
     },
     initSocket () {
@@ -71,3 +81,13 @@ export default {
   }
 }
 </script>
+<style scoped>
+ul li.list-header {
+  background: #f5f5f5;
+  text-align: center;
+}
+
+ul {
+  text-align: left;
+}
+</style>

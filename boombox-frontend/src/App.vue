@@ -1,7 +1,8 @@
 <template>
   <div id="app">
-    <router-view></router-view>
-    I am footer
+    <header><h1>📻 BOOMBox</h1></header>
+    <main><router-view></router-view></main>
+    <footer>&copy; BOOMBox 2017</footer>
   </div>
 </template>
 
@@ -17,7 +18,7 @@ body {
 }
 
 #app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
+  font-family: 'Raleway', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
@@ -29,11 +30,10 @@ main {
 }
 
 header {
+  text-align: center;
   margin: 0;
-  height: 56px;
-  padding: 0 16px 0 24px;
-  background-color: #35495E;
-  color: #ffffff;
+  padding: 10px 0;
+  background-color: #f5f5f5;
 }
 
 header span {
@@ -45,5 +45,10 @@ header span {
   font-weight: 400;
   box-sizing: border-box;
   padding-top: 16px;
+}
+
+footer {
+  text-align: center;
+  margin-top: 20px;
 }
 </style>

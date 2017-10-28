@@ -1,22 +1,18 @@
 <template>
-  <div>
-    <b-card v-if="songData">
-      <b-media>
-        <div  slot="aside">
-          <h1> {{ song.votes }} </h1>
-          <b-button v-if="!voteable" slot="aside" @click="vote" :variant="voteStatus">+1</b-button>
-        </div>
-        <h3> {{ songData.vidTitle }} </h3>
-      </b-media>
-      <audio ref="audio" v-if="srcReady" :src="srcURL"></audio>
-      <button v-if="srcReady" @click="play">Play</button>
-      <div v-if="playing">
-        Time bar
-      </div>
-
-    </b-card>
-
-  </div>
+  <li class="list-group-item"
+      :class="{
+        'list-group-item-primary' : playing,
+        'voteable' : voteable,
+        'list-group-item-success' : voted
+      }"
+      @click="vote"
+      v-if="songData">
+    {{ songData.vidTitle }}
+    <audio preload="auto" ref="audio" v-if="srcReady" :src="srcURL"></audio>
+    <span class="badge badge-primary badge-pill">{{ song.votes }}</span>
+    <b-progress :value="songCurrentTime" :max="songDuration" show-progress animated v-if="playing"></b-progress>
+    <!-- <b-button v-if="srcReady" @click="play">Play</b-button> -->
+  </li>
 </template>
 
 <script>
@@ -30,21 +26,23 @@ export default {
   },
   methods: {
     vote () {
-      if(this.voted) {
-        this.axios.get("/voteSong?partyId=" + this.partyid +
+      if (this.voteable) {
+        if(this.voted) {
+          this.axios.get("/voteSong?partyId=" + this.partyid +
           "&songId="+this.song.url+ "&userId="+this.uuid)
           .then(response => {
             console.log("no yo")
           })
-      } else {
-        this.axios.get("/voteSong?partyId=" + this.partyid +
-        "&songId="+this.song.url+ "&userId="+this.uuid)
+        } else {
+          this.axios.get("/voteSong?partyId=" + this.partyid +
+          "&songId="+this.song.url+ "&userId="+this.uuid)
           .then(response => {
             console.log("yo")
           })
+        }
+        this.voted = !this.voted;
+        console.log(this.voted)
       }
-      this.voted = !this.voted;
-      console.log(this.voted)
     },
     play () {
       let music = this.$refs.audio
@@ -75,3 +73,17 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+ul li.voteable:hover {
+  cursor: pointer;
+}
+
+ul li .badge {
+  float: right;
+}
+
+.progress {
+  margin-top: 10px;
+}
+</style>
