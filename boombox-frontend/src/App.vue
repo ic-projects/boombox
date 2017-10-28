@@ -1,6 +1,8 @@
 <template>
   <div id="app">
-    <header><h1>📻 BOOMBox</h1></header>
+    <router-link to="/">
+      <header><h1>📻 BOOMBox</h1></header>
+    </router-link>
     <main><router-view></router-view></main>
     <footer>&copy; BOOMBox 2017</footer>
   </div>

@@ -64,6 +64,16 @@ export default {
           console.log(response.data)
         })
     },
+    joinParty() {
+      this.axios.get("/joinParty?partyId=" + this.partyid)
+        .then(response => {
+          console.log(response.data)
+          this.uuid = response.data.playerid;
+          this.partyName = response.data.name;
+          this.initSocket()
+          this.getSongList()
+        })
+    },
     addSong () {
       this.axios.get("/addSong?partyId=" + this.partyid + "&songId=" + this.songId + "&userId=" + this.uuid)
         .then(response => {

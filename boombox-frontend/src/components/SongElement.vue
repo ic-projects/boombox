@@ -8,10 +8,13 @@
       @click="vote"
       v-if="songData">
     {{ songData.vidTitle }}
-    <audio preload="auto" ref="audio" v-if="srcReady" :src="srcURL"></audio>
+    <audio @canplaythrough="isReady"
+           @timeupdate="timeUpdate"
+           preload="auto" ref="audio" v-if="srcReady" :src="srcURL"></audio>
     <span class="badge badge-primary badge-pill">{{ song.votes }}</span>
-    <b-progress :value="songCurrentTime" :max="songDuration" show-progress animated v-if="playing"></b-progress>
-    <!-- <b-button v-if="srcReady" @click="play">Play</b-button> -->
+    <b-progress :value="songCurrentTime" :max="songDuration" v-if="playing"></b-progress>
+    {{ songCurrentTime }} / {{ songDuration }}
+    <b-button v-if="ready" @click="play">Play</b-button>
   </li>
 </template>
 
@@ -21,10 +24,23 @@ export default {
   props: ['song', 'playing', 'voteable','uuid'],
   data () {
     return {
-      voted: false
+      voted: false,
+      songCurrentTime: 0,
+      songDuration: 0,
+      ready: false
     }
   },
   methods: {
+    isReady () {
+      console.log("ready "+this.songData.vidTitle)
+      this.ready = true
+    },
+    timeUpdate () {
+      let music = this.$refs.audio
+      console.log(music.duration)
+      this.songDuration = music.duration
+      this.songCurrentTime = music.currentTime
+    },
     vote () {
       if (this.voteable) {
         if(this.voted) {
