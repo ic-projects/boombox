@@ -7,7 +7,7 @@
       }"
       @click="vote"
       v-if="songData">
-    {{ songData.vidTitle }}
+    {{ songData.vidTitle | decodeTitle }}
     <audio @canplaythrough="isReady"
            @timeupdate="timeUpdate"
            preload="auto" ref="audio" v-if="srcReady" :src="srcURL"></audio>
@@ -19,6 +19,8 @@
 </template>
 
 <script>
+  var he = require('he');
+
 export default {
   name: 'SongElement',
   props: ['song', 'playing', 'voteable','uuid'],
@@ -28,6 +30,11 @@ export default {
       songCurrentTime: 0,
       songDuration: 0,
       ready: false
+    }
+  },
+  filters: {
+    decodeTitle: function(title) {
+      return he.decode(title)
     }
   },
   methods: {
