@@ -39,6 +39,10 @@ let init = async function() {
     res.send(newPartyId);
   }
 
+  /**
+   * GET Paremeters:
+   *  - partyId
+   */
   var getJoinParty = async function(req, res) {
     res.send(uuid());
   }
