@@ -3,7 +3,7 @@ var http = require('http').Server(app);
 var MongoClient = require('mongodb').MongoClient;
 var co = require('co');
 var assert = require('assert');
-var uuid = require('uuid/v1');
+var uuidv4 = require('uuid/v4');
 var io = require('socket.io')(http);
 
 var timesyncServer = require('timesync/server');
@@ -103,17 +103,44 @@ let init = async function() {
     console.log('Found parties collection');
   }
 
+  /**
+   * GET Paremeters:
+   *  - name
+   */
   var getCreateParty = async function(req, res) {
     let newPartyId = Math.random().toString(36).substring(6);
     await parties.insertOne({
       'partyId': newPartyId,
+      'name': req.query.name,
       'currentSong': '',
       'currentSongStartTime': 0,
       'nextSong': '',
       'nextSongStartTime': 0,
       'songs': [],
+      'users': [],
   	});
     res.send(newPartyId);
+  }
+
+  /**
+   * GET Paremeters:
+   *  - partyId
+   */
+  var getJoinParty = async function(req, res) {
+  	uuid = uuidv4();
+
+  	let party = await parties.findAndModify({
+  		'partyId': req.query.partyId,
+  	}, [], {
+  		'$push': {
+  			'users': uuid
+  		}
+  	});
+
+    res.send({
+    	'uuid': uuid,
+    	'name': party.value.name,
+    });
   }
 
   /**
@@ -225,6 +252,7 @@ let init = async function() {
 
   // Handle API calls
   app.get('/createParty', getCreateParty);
+  app.get('/joinParty', getJoinParty);
   app.get('/songList', getSongList);
   app.get('/nextSong', getNextSong);
   app.get('/addSong', getAddSong);
