@@ -173,16 +173,30 @@ let init = async function() {
      *  - userId
      */
     var getVoteSong = async function(req, res) {
-        await parties.findAndModify({
+        let songList = await parties.findAndModify({
             'partyId': req.query.partyId,
-            'songs.songId': req.query.songId,
+            'songs': {
+                '$elemMatch': {
+                    '$and': [{
+                        'songId': req.query.songId,
+                    }, {
+                        'voterIds': {
+                            '$ne': req.query.userId,
+                        },
+                    }]
+                },
+            },
         }, [], {
             '$push': {
-                'songs.$.voterIds': req.query.userId
+                'songs.$.voterIds': req.query.userId,
             },
         });
 
-        res.send(true);
+        if (songList.value) {
+            res.send(true);
+        } else {
+            res.send(false);
+        }
     }
 
     /**
@@ -192,16 +206,28 @@ let init = async function() {
      *  - userId
      */
     var getUnvoteSong = async function(req, res) {
-        await parties.findAndModify({
+        let songList = await parties.findAndModify({
             'partyId': req.query.partyId,
-            'songs.songId': req.query.songId,
+            'songs': {
+                '$elemMatch': {
+                    '$and': [{
+                        'songId': req.query.songId,
+                    }, {
+                        'voterIds': req.query.userId,
+                    }]
+                },
+            },
         }, [], {
             '$pull': {
-                'songs.$.voterIds': req.query.userId
+                'songs.$.voterIds': req.query.userId,
             },
         });
 
-        res.send(true);
+        if (songList.value) {
+            res.send(true);
+        } else {
+            res.send(false);
+        }
     }
 
     // Handle API calls
