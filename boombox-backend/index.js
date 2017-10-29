@@ -8,38 +8,26 @@ var path = require('path');
 var uuidv4 = require('uuid/v4');
 var stream = require('youtube-audio-stream');
 var timesyncServer = require('timesync/server');
-var fs = require('fs');
 app.use('/timesync', timesyncServer.requestHandler);
+var fs = require('fs');
 
 app.get('/testAudio', function(req, res) {
-    var requestUrl = 'https://www.youtube.com/watch?v=' + 'vK7JXuWLEr4' // + req.query.songId
-    try {
-        stream(requestUrl).pipe(res)
-
-        // .on('data', (mp3) => {
-
-        //    console.log("hello");
-        //    io.emit("downloadNextSong", {sound: "this"});
-        // })
-    } catch (exception) {
-    res.status(500).send("Oops could not get the song")
-  }
 })
 
 var STARTOFNEXTSONG = undefined
 
-io.on("connection", function(client) {
-    console.log("Client connection");
-    client.on("join", function(data) {
-        console.log("client join!");
-        if (STARTOFNEXTSONG != undefined) {
-            client.emit("getReady", {
-                nextSong: STARTOFNEXTSONG,
-            })
-        }
-    });
-});
-
+    var requestUrl = 'https://www.youtube.com/watch?v=' + 'dQw4w9WgXcQ' // + req.query.songId
+    try {
+        let writable = fs.createWriteStream('audio.mp3');
+        writable.on('open', function(w) {
+            stream(requestUrl).pipe(writable)
+        })
+        writable.on('close', function(w) {
+           io.emit("downloadNextSong") 
+        })
+    } catch (exception) {
+    res.status(500).send("Oops could not get the song")
+  }
 app.get('/sync', function(req, res) {
     STARTOFNEXTSONG = new Date().getTime() + 15000
 	io.emit("getReady", {time: STARTOFNEXTSONG})
@@ -77,7 +65,7 @@ var START_OF_NEXT_SONG = undefined;
 
 // Listen on sockets'
 io.on('connection', function(client) {
-    client.on('join', function(data) {
+   client.on('join', function(data) {
         if (START_OF_NEXT_SONG != undefined) {
             client.emit('getReady', {
                 nextSong: START_OF_NEXT_SONG,
@@ -88,14 +76,14 @@ io.on('connection', function(client) {
     client.on('createParty', async function(data) {
         let newPartyId = Math.random().toString(36).substring(6);
         await parties.insertOne({
-            'partyId': newPartyId,
-            'name': data.name,
-            'currentSong': '',
+            'partyId'             : newPartyId,
+            'name'                : data.name,
+            'currentSong'         : '',
             'currentSongStartTime': 0,
-            'nextSong': '',
-            'nextSongStartTime': 0,
-            'songs': [],
-            'users': [],
+            'nextSong'            : '',
+            'nextSongStartTime'   : 0,
+            'songs'               : [],
+            'users'               : [],
         });
 
         client.emit('createdParty', {
