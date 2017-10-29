@@ -3,7 +3,7 @@
     <div class="container text-center">
       <h3>Welcome to {{ partyName }}</h3>
       <h4>{{ partyId }}</h4>
-      <!--b-button @click="songFinish">POP</b-button-->
+      <b-button @click="songFinish">POP</b-button>
       <br>
       <ul class="list-group">
         <li class="list-group-item list-header">Now Playing</li>
@@ -16,7 +16,7 @@
       <ul class="list-group" >
         <li class="list-group-item list-header">Song List</li>
         <div v-for="song in songqueue" :key="song.songId">
-          <SongElement :songId="song.songId" :song="song.voteCount" :uuid="uuid" :voteable="true" :partyId="partyId" :playing="false"></SongElement>
+          <SongElement :songId="song.songId" :voteCount="song.voteCount" :uuid="uuid" :voteable="true" :partyId="partyId" :playing="false"></SongElement>
         </div>
       </ul>
       <br>

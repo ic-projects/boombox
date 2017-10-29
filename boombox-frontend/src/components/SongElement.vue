@@ -85,8 +85,8 @@ export default {
       return (!this.voteable && this.songData && !this.songData.error)
     },
     srcURL () {
-      return this.srcReady ? this.songData.vidInfo['3'].dloadUrl : "";
-      //return "http://bb03797f.ngrok.io/"++".mp3";
+      //return this.srcReady ? this.songData.vidInfo['3'].dloadUrl : "";
+      return "http://bd4c9404.ngrok.io/"+this.songId+".mp3";
     }
   },
   sockets: {
@@ -108,8 +108,9 @@ export default {
   asyncComputed: {
     songData () {
       return this.axios.get(
-        "https://youtubemp3api.com/@api/json/mp3/" + this.songId)
+       "https://youtubemp3api.com/@api/json/mp3/" + this.songId)
         .then(response => response.data)
+
     }
   },
   watch: {
