@@ -65,7 +65,7 @@ var START_OF_NEXT_SONG = undefined;
 
 // Listen on sockets'
 io.on('connection', function(client) {
-   client.on('join', function(data) {
+    client.on('join', function(data) {
         if (START_OF_NEXT_SONG != undefined) {
             client.emit('getReady', {
                 nextSong: START_OF_NEXT_SONG,
