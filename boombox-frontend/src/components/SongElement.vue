@@ -13,7 +13,7 @@
            preload="auto" ref="audio" v-if="srcReady" :src="srcURL"></audio>
     <span class="badge badge-primary badge-pill">{{ voteCount }}</span>
     <b-progress :value="songCurrentTime" :max="songDuration" v-if="playing"></b-progress>
-    <span class="time" v-if="playing">{{ songCurrentTime }} / {{ songDuration | moment('mm:ss') }}</span>
+    <span class="time" v-if="playing">{{ songCurrentTime }} / {{ songDuration }}</span>
     <b-button v-if="ready">Ready</b-button>
   </li>
 </template>
@@ -48,8 +48,9 @@ export default {
       console.log(music.duration)
       this.songDuration = music.duration
       this.songCurrentTime = music.currentTime
-      if(this.songCurrentTime - this.songDuration < 1) {
-        this.$socket.emit('finishSong', { partyId: this.partyId, songId: this.songId})
+      if( this.songDuration  - this.songCurrentTime < 1) {
+        console.log("FINISH")
+        this.$socket.emit('songFinish', { partyId: this.partyId, songId: this.songId})
       }
     },
     vote () {
@@ -103,7 +104,7 @@ export default {
   asyncComputed: {
     songData () {
       return this.axios.get(
-        "https://db221a2e.ngrok.io/" + this.songId + ".mp3")
+        "https://youtubemp3api.com/@api/json/mp3/" + this.songId)
         .then(response => response.data)
     }
   },

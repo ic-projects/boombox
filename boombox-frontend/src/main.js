@@ -11,7 +11,7 @@ import axios from 'axios'
 import VueAxios from 'vue-axios'
 import VueSocketio from "vue-socket.io"
 
-Vue.use(VueSocketio, "ws://db221a2e.ngrok.io/")
+Vue.use(VueSocketio, "ws://0ca896d8.ngrok.io/")
 Vue.use(require('vue-moment'))
 Vue.use(VueAxios, axios)
 Vue.use(AsyncComputed)
