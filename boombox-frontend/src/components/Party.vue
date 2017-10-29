@@ -75,6 +75,10 @@ export default {
     }
   },
   mounted () {
+    this.$options.sockets[`${this.partyId}/queueUpdate`] = (response) => {
+      this.playingNext = response.playingNext
+      this.playingNow = response.playingNow
+    }
     this.$options.sockets[`${this.partyId}/songListAdd`] = (response) => {
       this.songqueue.push({songId: response.songId, voteCount: 0})
       this.resortQueue()
@@ -98,8 +102,8 @@ export default {
       this.partyName = response.party.name
       this.songqueue = response.party.songs
       this.songqueue.map((elem) => {elem.voteCount = elem.voterIds.length})
-      this.playingNext = {songId: response.party.currentSong, time: response.party.currentSongStartTime}
-      this.playingNow = {songId: response.party.nextSong, time: response.party.nextSongStartTime}
+      this.playingNow = {songId: response.party.currentSong, time: response.party.currentSongStartTime, voteCount: response.party.currentSongVoteCount}
+      this.playingNext = {songId: response.party.nextSong, time: response.party.nextSongStartTime, voteCount: response.party.nextSongVoteCount}
       this.resortQueue()
     }
   }
