@@ -2,6 +2,7 @@ var MongoClient = require('mongodb').MongoClient;
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
+var request = require('request');
 var io = require('socket.io')(http);
 const decoder = require('lame').Decoder
 var path = require('path');
@@ -10,14 +11,15 @@ var stream = require('youtube-audio-stream');
 var timesyncServer = require('timesync/server');
 app.use('/timesync', timesyncServer.requestHandler);
 var fs = require('fs');
+var parseIsoDuration = require('parse-iso-duration');
 
 app.get('/testAudio', function(req, res) {
 })
 
 var STARTOFNEXTSONG = undefined
 
-function prepareAudio(youtubeCode) {
-    var requestUrl = 'https://www.youtube.com/watch?v=' + youtubeCode
+function prepareAudio(songId) {
+    var requestUrl = 'https://www.youtube.com/watch?v=' + songId
     try {
         let writable = fs.createWriteStream('audio.mp3');
         writable.on('open', function(w) {
@@ -57,6 +59,30 @@ let init = async function() {
     }
 }
 
+let prepareKey = async function() {
+    fs.readFile('youtubeApiKey', 'utf8', function (err, data) {
+        if (err) {
+            return console.log(err);
+        }
+        youtubeApiKey = data;
+    });
+}
+
+let getSongDuration = async function(songId) {
+    let duration = 0;
+    console.log('https://www.googleapis.com/youtube/v3/videos?id='+ songId
+            + '&part=contentDetails&key=' + youtubeApiKey);
+    await request('https://www.googleapis.com/youtube/v3/videos?id='+ songId
+            + '&part=contentDetails&key=' + youtubeApiKey, { json: true }, (err, res, body) => {
+        if (err) {
+            return console.log(err);
+        }
+        duration = parseIsoDuration(body.items[0].contentDetails.duration);
+        console.log(duration);
+    });
+    return duration;
+}
+
 // Setup mongoDB
 var parties;
 init();
@@ -65,6 +91,10 @@ init();
 var timesyncServer = require('timesync/server');
 app.use('/timesync', timesyncServer.requestHandler);
 var START_OF_NEXT_SONG = undefined;
+
+// Setup YouTube API requests
+var youtubeApiKey;
+prepareKey();
 
 // Listen on sockets'
 io.on('connection', function(client) {
