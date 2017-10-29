@@ -13,9 +13,6 @@ app.use('/timesync', timesyncServer.requestHandler);
 var fs = require('fs');
 var parseIsoDuration = require('parse-iso-duration');
 
-app.get('/testAudio', function(req, res) {
-})
-
 var STARTOFNEXTSONG = undefined
 
 function prepareAudio(songId) {
