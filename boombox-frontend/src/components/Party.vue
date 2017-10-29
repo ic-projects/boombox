@@ -3,7 +3,7 @@
     <div class="container text-center">
       <h3>Welcome to {{ partyName }}</h3>
       <h4>{{ partyId }}</h4>
-      <b-button @click="songFinish">POP</b-button>
+      <!--b-button @click="songFinish">POP</b-button-->
       <br>
       <ul class="list-group">
         <li class="list-group-item list-header">Now Playing</li>

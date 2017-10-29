@@ -50,7 +50,11 @@ export default {
       this.songCurrentTime = music.currentTime
       if( this.songDuration  - this.songCurrentTime < 1) {
         console.log("FINISH")
+        console.log({ partyId: this.partyId, songId: this.songId})
         this.$socket.emit('songFinish', { partyId: this.partyId, songId: this.songId})
+        this.songCurrentTime = 0;
+        music.currentTime = 0;
+        music.pause();
       }
     },
     vote () {
@@ -110,20 +114,38 @@ export default {
   },
   watch: {
     time: function(newTime) {
-      console.log(newTime)
+      /*console.log(newTime)
       console.log(Date.now())
       if(newTime > Date.now()) {
         console.log("starting timer for "+newTime - Date.now())
         setTimeout(() => {
           if(this.playing && this.songId) {
-            console.log("PLAYED")
+            //console.log("PLAYED")
             let music = this.$refs.audio
-            music.play();
+            //music.play()
         }
-        }, newTime - Date.now())
+        }, newTime - window.ts.now())
       } else {
+        if(newTime > 0) {
+          /*let checkReady = () => {
+            //console.log(this)
+            if(this.ready) {
+              console.log("caught up")
+              let music = this.$refs.audio
+              let skip =  (window.ts.now() - newTime )/1000
+              console.log(skip)
+              music.currentTime = skip
+              music.play();
+              music.currentTime = skip
+
+              clearInterval(waiter)
+            }
+          }
+          var waiter = setInterval(checkReady, 1000)
+        }
+
         console.log("missed start time")
-      }
+      }*/
     }
   },
   mounted () {
@@ -131,9 +153,10 @@ export default {
         this.$parent.updateVoteCount(this.songId, response.votes)
       }
 
-
-
-
+    this.$options.sockets[`${this.partyId}/${this.songId}/play`] = (response) => {
+      let music = this.$refs.audio
+      music.play()
+    }
   }
 }
 </script>

@@ -10,10 +10,10 @@
 
 <script>
 var timesync = require('timesync')
-/*window.ts = timesync.create({
-  server: '/timesync',
-  interval: 100000
-})*/
+window.ts = timesync.create({
+  server: 'http://bd4c9404.ngrok.io/timesync',
+  interval: 10000
+})
 
 export default {
   name: 'app'
