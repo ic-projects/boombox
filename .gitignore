@@ -58,3 +58,14 @@ typings/
 # dotenv environment variables file
 .env
 
+#Bin and secret files
+boombox-backend/ngrok
+boombox-backend/public/3M_5oYU-IsU.mp3
+boombox-backend/public/BQ0mxQXmLsk.mp3
+boombox-backend/public/IUqA-uMEDgg.mp3
+boombox-backend/public/N1YTeXQCEAs.mp3
+boombox-backend/public/QK8mJJJvaes.mp3
+boombox-backend/public/audio.mp3
+boombox-backend/public/gy1B3agGNxw.mp3
+boombox-backend/public/undefined.mp3
+boombox-backend/youtubeApiKey
