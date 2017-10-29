@@ -4,14 +4,16 @@
       <h3>Welcome to {{ partyName }}</h3>
       <br>
       <ul class="list-group">
-        <SongElement :song="playingNow" :uuid="uuid" :voteable="false" :partyId="partyId" :playing="true"></SongElement>
-        <SongElement :song="playingNext" :uuid="uuid" :voteable="false" :partyId="partyId" :playing="false"></SongElement>
+        <SongElement :songId="playingNow.songId" :uuid="uuid" :voteable="false" :partyId="partyId" :playing="true"></SongElement>
+        <SongElement :songId="playingNext.songId" :uuid="uuid" :voteable="false" :partyId="partyId" :playing="false"></SongElement>
       </ul>
       <br>
       <br>
-      <ul class="list-group" v-for="song in songqueue">
+      <ul class="list-group" >
         <li class="list-group-item list-header">Song List</li>
-        <SongElement :song="song" :uuid="uuid" :voteable="true" :partyId="partyId" :playing="false"></SongElement>
+        <div v-for="song in songqueue" :key="song.songId">
+          <SongElement :songId="song.songId" :voteCount="song.voteCount" :uuid="uuid" :voteable="true" :partyId="partyId" :playing="false"></SongElement>
+        </div>
       </ul>
       <br>
       <b-form @submit.prevent="addSong">
@@ -52,6 +54,15 @@ export default {
     }
   },
   methods: {
+    updateVoteCount (id, votes) {
+      console.log("id:"+id+" votes:"+votes)
+      this.songqueue.find((element) => element.songId == id).voteCount = votes;
+      this.resortQueue()
+    },
+    resortQueue () {
+      console.log("sorting")
+      this.songqueue = this.songqueue.sort((a,b) => { return b.voteCount - a.voteCount})
+    },
     leaveParty () {
       this.$socket.emit('leaveParty', { partyId: this.partyId }, (response) => {
           router.push("/");
@@ -66,8 +77,9 @@ export default {
     }
   },
   mounted () {
-    this.$options.sockets[`${this.partyId}/addedSong`] = (response) => {
-      console.log(response)
+    this.$options.sockets[`${this.partyId}/songListAdd`] = (response) => {
+      this.songqueue.push({songId: response.songId, voteCount: 0})
+      this.resortQueue()
     }
 
     this.joinParty()
@@ -78,8 +90,10 @@ export default {
       console.log(response)
       this.partyName = response.party.name
       this.songqueue = response.party.songs
+      this.songqueue.map((elem) => {elem.voteCount = elem.voterIds.length})
       this.playingNext = {songId: response.party.currentSong, time: response.party.currentSongStartTime}
       this.playingNow = {songId: response.party.nextSong, time: response.party.nextSongStartTime}
+      this.resortQueue()
     }
   }
 }

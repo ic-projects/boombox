@@ -96,21 +96,19 @@ io.on('connection', function(client) {
 
     client.on('joinParty', async function(data) {
         uuid = uuidv4();
-        await parties.findAndModify({
+        let songList = await parties.findAndModify({
             'partyId': data.partyId,
         }, [], {
             '$push': {
                 'users': uuid
             }
-        });
-
-        let songList = await parties.findOne({
-            'partyId': data.partyId,
+        }, {
+          'new': true
         });
 
         client.emit('joinedParty', {
             'uuid': uuid,
-            'party': songList,
+            'party': songList.value,
         });
         io.emit(data.partyId + '/userListAdd');
     });
@@ -208,13 +206,14 @@ io.on('connection', function(client) {
             },
         });
 
+
+
         if (songList.value) {
             client.emit(data.partyId + '/votedSong', {
                 'success': true,
             });
-            io.emit(data.partyId + '/songListVote', {
-                'songId': data.songId,
-                'votes': songList.data.songs.voterIds.length + 1,
+            io.emit(data.partyId + '/' + data.songId + '/songListVote', {
+                'votes': songList.value.songs.find((element) => element.songId == data.songId).voterIds.length + 1,
             })
         } else {
             client.emit(data.partyId + '/votedSong', {
@@ -245,9 +244,8 @@ io.on('connection', function(client) {
             client.emit(data.partyId + '/unvotedSong', {
                 'success': true,
             });
-            io.emit(data.partyId + '/songListVote', {
-                'songId': data.songId,
-                'votes': songList.data.songs.voterIds.length - 1,
+            io.emit(data.partyId + '/' + data.songId + '/songListVote', {
+                'votes': songList.value.songs.find((element) => element.songId == data.songId).voterIds.length - 1,
             })
         } else {
             client.emit(data.partyId + '/unvotedSong', {

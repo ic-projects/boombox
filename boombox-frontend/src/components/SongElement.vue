@@ -6,7 +6,7 @@
         'list-group-item-success' : voted
       }"
       @click="vote"
-      v-if="song.songId && songData">
+      v-if="songId && songData">
     {{ songData.vidTitle | decodeTitle }}
     <audio @canplaythrough="isReady"
            @timeupdate="timeUpdate"
@@ -23,20 +23,18 @@
 
 export default {
   name: 'SongElement',
-  props: ['song', 'playing', 'voteable','uuid', 'partyId'],
+  props: ['songId', 'playing', 'voteCount', 'voteable','uuid', 'partyId'],
   data () {
     return {
       voted: false,
       songCurrentTime: 0,
       songDuration: 0,
-      ready: false,
-      voteCount: 0
+      ready: false
     }
   },
   mounted () {
-    this.voteCount = this.song.votes; //TODO
-    this.$options.sockets[`${this.partyId}/${this.song.songId}/voteCount`] = (response) => {
-      this.voteCount = response.voteCount
+    this.$options.sockets[`${this.partyId}/${this.songId}/songListVote`] = (response) => {
+      this.$parent.updateVoteCount(this.songId, response.votes)
     }
   },
   filters: {
@@ -58,9 +56,9 @@ export default {
     vote () {
       if (this.voteable) {
         if(this.voted) {
-          this.$socket.emit('/unvoteSong', { partyId: this.partyId, songId: this.song.songId, userId: this.uuid })
+          this.$socket.emit('unvoteSong', { partyId: this.partyId, songId: this.songId, userId: this.uuid })
         } else {
-          this.$socket.emit('/voteSong', { partyId: this.partyId, songId: this.song.songId, userId: this.uuid })
+          this.$socket.emit('voteSong', { partyId: this.partyId, songId: this.songId, userId: this.uuid })
         }
         this.voted = !this.voted;
         console.log(this.voted)
@@ -90,7 +88,7 @@ export default {
   asyncComputed: {
     songData () {
       return this.axios.get(
-        "https://youtubemp3api.com/@api/json/mp3/" + this.song.songId)
+        "https://youtubemp3api.com/@api/json/mp3/" + this.songId)
         .then(response => response.data)
     }
   }
