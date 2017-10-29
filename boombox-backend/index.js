@@ -15,24 +15,29 @@ var parseIsoDuration = require('parse-iso-duration');
 
 var STARTOFNEXTSONG = undefined
 
-function prepareAudio(songId) {
-    var requestUrl = 'https://www.youtube.com/watch?v=' + songId
+function prepareAudio(youtubeCode) {
+    var requestUrl = 'https://www.youtube.com/watch?v=' + 'vK7JXuWLEr4'// + youtubeCode
     try {
-        let writable = fs.createWriteStream('audio.mp3');
+        let writable = fs.createWriteStream('public/' + youtubeCode + '.mp3');
         writable.on('open', function(w) {
             stream(requestUrl).pipe(writable)
         })
         writable.on('close', function(w) {
-           io.emit("downloadNextSong")
+           io.emit("test", {
+            songId: youtubeCode,
+           })
         })
     } catch (exception) {
     res.status(500).send("Oops could not get the song")
     }
 }
 
+app.get('/testAudio', function (req, res) {
+    prepareAudio();
+    res.send("<h1>...</h1>")
+})
+
 app.get('/sync', function(req, res) {
-    STARTOFNEXTSONG = new Date().getTime() + 15000
-	io.emit("getReady", {time: STARTOFNEXTSONG})
 
     res.send(`30 seconds start now`)
 });
@@ -105,6 +110,7 @@ io.on('connection', function(client) {
 
     client.on('createParty', async function(data) {
         let newPartyId = Math.random().toString(36).substring(6);
+        STARTOFNEXTSONG = new Date().getTime() + 60000;
         await parties.insertOne({
             'partyId'             : newPartyId,
             'name'                : data.name,
@@ -120,6 +126,7 @@ io.on('connection', function(client) {
 
         client.emit('createdParty', {
             'newPartyId': newPartyId,
+            'timeOfStart': STARTOFNEXTSONG
         });
     });
 
@@ -192,6 +199,10 @@ io.on('connection', function(client) {
 
       let noCur = (party.currentSongStartTime === 0)
       let noNext = (party.nextSongStartTime === 0)
+      let previousNextSongStartTime = party.nextSongStartTime;
+      if (noNext) {
+        console.log("NO NEXT but timout should be 0 so OK");
+      }
 
       if(noCur && noNext) {
         let nextSong = party.songs.reduce((a, b) => {
@@ -210,7 +221,7 @@ io.on('connection', function(client) {
             }, [], {
               '$set': {
                 'currentSong': nextSong.songId,
-                'currentSongStartTime': (new Date()) + 1000 * 10,
+                'currentSongStartTime': previousNextSongStartTime,
                 'currentSongVoteCount': nextSong.voterIds.length,}
             })
         }
@@ -220,12 +231,13 @@ io.on('connection', function(client) {
         },{voterIds: {length: -1}})
         if(nextSong) {
           removeSongAdmin(nextSong.songId, id)
+          let nextSongStartTime = getSongDuration(party.currentSong) + party.currentSongStartTime + 1000
           await parties.findAndModify({
               'partyId': id
             }, [], {
               '$set': {
                 'nextSong': nextSong.songId,
-                'nextSongStartTime': 1,
+                'nextSongStartTime': nextSongStartTime,
                 'nextSongVoteCount': nextSong.voterIds.length,}
             })
         }
@@ -244,12 +256,13 @@ io.on('connection', function(client) {
         },{voterIds: {length: -1}})
         if(nextSong) {
           removeSongAdmin(nextSong.songId, id)
+          let nextSongStartTime = previousNextSongStartTime + getSongDuration(nextSong.songId) + new Date()
           await parties.findAndModify({
               'partyId': id
             }, [], {
               '$set': {
                 'nextSong': nextSong.songId,
-                'nextSongStartTime': 1,
+                'nextSongStartTime': nextSongStartTime,
                 'nextSongVoteCount': nextSong.voterIds.length,}
             })
         }
@@ -276,11 +289,31 @@ io.on('connection', function(client) {
         'partyId': id
       })
 
-      io.emit(id + '/queueUpdate', {
-        'playingNow': {'songId': party.currentSong, 'time': party.currentSongStartTime, 'voteCount': party.currentSongVoteCount},
-        'playingNext': {'songId': party.nextSong, 'time': party.nextSongStartTime, 'voteCount': party.nextSongVoteCount},
 
-      })
+          var requestUrl = 'https://www.youtube.com/watch?v=' + party.nextSong
+          try {
+            let writable = fs.createWriteStream('public/' + party.nextSong + '.mp3');
+            writable.on('open', function(w) {
+                stream(requestUrl).pipe(writable)
+            })
+            writable.on('close', function(w) {
+              io.emit(id + '/queueUpdate', {
+                'playingNow': {'songId': party.currentSong, 'time': party.currentSongStartTime, 'voteCount': party.currentSongVoteCount},
+                'playingNext': {'songId': party.nextSong, 'time': party.nextSongStartTime, 'voteCount': party.nextSongVoteCount},
+              })
+              if (c
+                )
+              setTimeout(checkQueue(id), previousNextSongStartTime - 50000)
+            })
+        } catch (exception) {
+            console.log("in getting youtube stream")
+        }
+
+      // io.emit(id + '/queueUpdate', {
+      //   'playingNow': {'songId': party.currentSong, 'time': party.currentSongStartTime, 'voteCount': party.currentSongVoteCount},
+      //   'playingNext': {'songId': party.nextSong, 'time': party.nextSongStartTime, 'voteCount': party.nextSongVoteCount},
+
+      // })
 
     }
 
