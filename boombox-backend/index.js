@@ -24,7 +24,7 @@ function prepareAudio(youtubeCode) {
             stream(requestUrl).pipe(writable)
         })
         writable.on('close', function(w) {
-           io.emit("downloadNextSong") 
+           io.emit("downloadNextSong")
         })
     } catch (exception) {
     res.status(500).send("Oops could not get the song")
@@ -96,7 +96,7 @@ io.on('connection', function(client) {
 
     client.on('joinParty', async function(data) {
         uuid = uuidv4();
-        let songList = await parties.findAndModify({
+        await parties.findAndModify({
             'partyId': data.partyId,
         }, [], {
             '$push': {
@@ -104,9 +104,13 @@ io.on('connection', function(client) {
             }
         });
 
-        client.emit(data.partyId + '/joinedParty', {
+        let songList = await parties.findOne({
+            'partyId': data.partyId,
+        });
+
+        client.emit('joinedParty', {
             'uuid': uuid,
-            'party': songList.value,
+            'party': songList,
         });
         io.emit(data.partyId + '/userListAdd');
     });
@@ -253,7 +257,7 @@ io.on('connection', function(client) {
     });
 });
 
-// Testing 
+// Testing
 app.get('/sync', function(req, res) {
     START_OF_NEXT_SONG = new Date().getTime() + 15000
     io.emit('getReady', {time: START_OF_NEXT_SONG})
