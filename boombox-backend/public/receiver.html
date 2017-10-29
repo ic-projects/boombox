@@ -19,7 +19,7 @@
 
 	  var socket = io.connect('http://localhost:30000');
 	  socket.on('connection', function(data) {
-	  	console.log("successfully connected to the browser")
+	  	console.log("successfully connected to the server")
 	  });
 	 
 	  // get notified on changes in the offset
@@ -47,9 +47,19 @@
 	  	}, data.time - ts.now())
 	  });
 
+      socket.on("DOWNLOAD NOW", function(data){
+      	  // data.nextSong
+      })
+
 	</script> 
 </head>
 <body>
+
+    <div id="nextSong">
+    </div>
+	<audio controls>
+		<source="/testAudio" >
+	</audio>
 
 	<h1 id="boom" style="color:white">BOOM</h1>
 	<h2 id="waiting" style="color:white">Waiting....</h2>

@@ -12,6 +12,7 @@
   "dependencies": {
     "co": "^4.6.0",
     "express": "^4.16.2",
+    "lame": "^1.2.4",
     "mongodb": "^2.2.33",
     "socket.io": "^2.0.4",
     "timesync": "^0.4.2",
