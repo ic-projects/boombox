@@ -16,20 +16,25 @@
       <ul class="list-group" >
         <li class="list-group-item list-header">Song List</li>
         <div v-for="song in songqueue" :key="song.songId">
-          <SongElement :songId="song.songId" :voteCount="song.voteCount" :uuid="uuid" :voteable="true" :partyId="partyId" :playing="false"></SongElement>
+          <SongElement :songId="song.songId" :song="song.voteCount" :uuid="uuid" :voteable="true" :partyId="partyId" :playing="false"></SongElement>
         </div>
       </ul>
       <br>
-      <b-form @submit.prevent="addSong">
+      <b-form @submit.prevent="searchSongs">
         <b-input-group>
           <b-form-input type="text"
-                        v-model="songId"
-                        placeholder="Enter the YouTube ID"></b-form-input>
+                        v-model="searchInput"
+                        placeholder="Search for a song"></b-form-input>
           <b-input-group-button>
-              <b-button type="submit" variant="primary">Add Song</b-button>
+              <b-button type="submit" variant="primary">Search</b-button>
           </b-input-group-button>
         </b-input-group>
       </b-form>
+      <ul class="list-group" >
+        <div v-for="song in searchresults" :key="song.id.videoId">
+          <SearchElement :songId="song.id.videoId" :songTitle="song.snippet.title"></SearchElement>
+        </div>
+      </ul>
       <br>
       <router-link to="/" id="join-party">Leave a party!</router-link>
     </div>
@@ -38,11 +43,13 @@
 
 <script>
   import SongElement from '@/components/SongElement'
+  import SearchElement from '@/components/SearchElement'
 
 export default {
   name: 'party',
   components: {
-    SongElement
+    SongElement,
+    SearchElement
   },
   props: ['partyId'],
   data () {
@@ -50,6 +57,8 @@ export default {
       msg: 'Welcome to Your Vue.js PWA',
       uuid: '',
       songqueue: [],
+      searchInput: '',
+      searchresults: [],
       playingNext: {songId:""},
       playingNow: {songId:""},
       partyName: '',
@@ -74,8 +83,12 @@ export default {
       console.log
       this.$socket.emit('joinParty', { partyId: this.partyId })
     },
-    addSong () {
-      this.$socket.emit('addSong', { partyId: this.partyId, songId: this.songId, userId: this.uuid })
+    searchSongs: async function() {
+      await this.axios.get(
+        'https://www.googleapis.com/youtube/v3/search?q='+ this.searchInput
+            + '&part=snippet&maxResults=10&type=video&key=AIzaSyClC71UhsWz3tr3ukz68b8_FuvpBQABYM0').then((response) => {
+        this.searchresults = response.data.items
+      });
     }
   },
   mounted () {
