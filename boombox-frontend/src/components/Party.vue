@@ -27,7 +27,7 @@
         </b-input-group>
       </b-form>
       <br>
-      <a href="#" @click="leaveParty" id="join-party">Leave a party!</a>
+      <router-link to="/" id="join-party">Leave a party!</router-link>
     </div>
   </div>
 </template>
@@ -62,11 +62,6 @@ export default {
     resortQueue () {
       console.log("sorting")
       this.songqueue = this.songqueue.sort((a,b) => { return b.voteCount - a.voteCount})
-    },
-    leaveParty () {
-      this.$socket.emit('leaveParty', { partyId: this.partyId }, (response) => {
-          router.push("/");
-        })
     },
     joinParty() {
       console.log

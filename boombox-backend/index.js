@@ -83,8 +83,10 @@ io.on('connection', function(client) {
             'name'                : data.name,
             'currentSong'         : '',
             'currentSongStartTime': 0,
+            'currentSongVoteCount': 0,
             'nextSong'            : '',
             'nextSongStartTime'   : 0,
+            'nextSongVoteCount'   : 0,
             'songs'               : [],
             'users'               : [],
         });
@@ -120,12 +122,14 @@ io.on('connection', function(client) {
             'fields': {
                 'nextSong': 1,
                 'nextSongStartTime': 1,
+                'nextSongVoteCount': 1,
             },
         });
 
         client.emit(data.partyId + '/gotNextSong', {
             'nextSong': nextSong.nextSong,
             'nextSongStartTime': nextSong.nextSongStartTime,
+            'nextSongVoteCount': nextSong.nextSongVoteCount,
         });
     });
 
@@ -146,16 +150,9 @@ io.on('connection', function(client) {
         });
 
         if (songList.value) {
-            client.emit(data.partyId + '/addedSong', {
-                'success': true,
-            });
             io.emit(data.partyId + '/songListAdd', {
                 'songId': data.songId,
             })
-        } else {
-            client.emit(data.partyId + '/addedSong', {
-                'success': false,
-            });
         }
     });
 
@@ -173,16 +170,9 @@ io.on('connection', function(client) {
         });
 
         if (songList.value) {
-            client.emit(data.partyId + '/removedSong', {
-                'success': true,
-            });
             io.emit(data.partyId + '/songListRemove', {
                 'songId': data.songId,
             })
-        } else {
-            client.emit(data.partyId + '/removedSong', {
-                'success': false,
-            });
         }
     });
 
@@ -206,19 +196,10 @@ io.on('connection', function(client) {
             },
         });
 
-
-
         if (songList.value) {
-            client.emit(data.partyId + '/votedSong', {
-                'success': true,
-            });
             io.emit(data.partyId + '/' + data.songId + '/songListVote', {
                 'votes': songList.value.songs.find((element) => element.songId == data.songId).voterIds.length + 1,
             })
-        } else {
-            client.emit(data.partyId + '/votedSong', {
-                'success': false,
-            });
         }
     });
 
@@ -241,16 +222,9 @@ io.on('connection', function(client) {
         });
 
         if (songList.value) {
-            client.emit(data.partyId + '/unvotedSong', {
-                'success': true,
-            });
             io.emit(data.partyId + '/' + data.songId + '/songListVote', {
                 'votes': songList.value.songs.find((element) => element.songId == data.songId).voterIds.length - 1,
             })
-        } else {
-            client.emit(data.partyId + '/unvotedSong', {
-                'success': false,
-            });
         }
     });
 });
