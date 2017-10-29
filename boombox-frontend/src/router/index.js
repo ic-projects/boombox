@@ -19,7 +19,7 @@ export default new Router({
       component: CreateParty,
     },
     {
-      path: '/party/:partyid',
+      path: '/party/:partyId',
       name: 'Party',
       component: Party,
       props: true

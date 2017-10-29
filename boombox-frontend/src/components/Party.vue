@@ -4,14 +4,14 @@
       <h3>Welcome to {{ partyName }}</h3>
       <br>
       <ul class="list-group">
-        <SongElement :song="playingNow" :uuid="uuid" :voteable="false" :playing="true"></SongElement>
-        <SongElement :song="playingNext" :uuid="uuid" :voteable="false" :playing="false"></SongElement>
+        <SongElement :song="playingNow" :uuid="uuid" :voteable="false" :partyId="partyId" :playing="true"></SongElement>
+        <SongElement :song="playingNext" :uuid="uuid" :voteable="false" :partyId="partyId" :playing="false"></SongElement>
       </ul>
       <br>
       <br>
       <ul class="list-group" v-for="song in songqueue">
         <li class="list-group-item list-header">Song List</li>
-        <SongElement :song="song" :uuid="uuid" :voteable="true" :playing="false"></SongElement>
+        <SongElement :song="song" :uuid="uuid" :voteable="true" :partyId="partyId" :playing="false"></SongElement>
       </ul>
       <br>
       <b-form @submit.prevent="addSong">
@@ -38,56 +38,50 @@ export default {
   components: {
     SongElement
   },
-  props: ['partyid'],
+  props: ['partyId'],
   data () {
     return {
       msg: 'Welcome to Your Vue.js PWA',
       uuid: '',
-      songqueue: [{url: "3M_5oYU-IsU", votes: 69}],
-      playingNext: {url: "3M_5oYU-IsU", votes: 69},
-      playingNow: {url: "4LfJnj66HVQ", votes: 420},
-      partyName: 'Nik\'s 31\'st Birthday',
+      songqueue: [],
+      playingNext: {songId:""},
+      playingNow: {songId:""},
+      partyName: '',
       isSpeaker: false,
       songId: '',
     }
   },
   methods: {
     leaveParty () {
-      this.axios.get("/leaveParty?partyId=" + this.partyid)
-        .then(response => {
+      this.$socket.emit('leaveParty', { partyId: this.partyId }, (response) => {
           router.push("/");
         })
     },
-    getSongList () {
-      this.axios.get("/songList?partyId=" + this.partyid)
-        .then(response => {
-          console.log(response.data)
-        })
-    },
     joinParty() {
-      this.axios.get("/joinParty?partyId=" + this.partyid)
-        .then(response => {
-          console.log(response.data)
-          this.uuid = response.data.playerid;
-          this.partyName = response.data.name;
-          this.initSocket()
-          this.getSongList()
-        })
+      console.log
+      this.$socket.emit('joinParty', { partyId: this.partyId })
     },
     addSong () {
-      this.axios.get("/addSong?partyId=" + this.partyid + "&songId=" + this.songId + "&userId=" + this.uuid)
-        .then(response => {
-          console.log(response.data)
-        })
-    },
-    initSocket () {
-
+      this.$socket.emit('addSong', { partyId: this.partyId, songId: this.songId, userId: this.uuid })
     }
   },
   mounted () {
-    //TODO CALL API joinParty, getSongList connect to socket io
-    this.joinParty()
+    this.$options.sockets[`${this.partyId}/addedSong`] = (response) => {
+      console.log(response)
+    }
 
+
+    this.joinParty()
+  },
+  sockets: {
+    joinedParty(response) {
+      this.uuid = response.uuid
+      console.log(response)
+      this.partyName = response.party.name
+      this.songqueue = response.party.songs
+      this.playingNext = {songId: response.party.currentSong, time: response.party.currentSongStartTime}
+      this.playingNow = {songId: response.party.nextSong, time: response.party.nextSongStartTime}
+    }
   }
 }
 </script>

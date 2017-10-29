@@ -6,14 +6,14 @@
         'list-group-item-success' : voted
       }"
       @click="vote"
-      v-if="songData">
+      v-if="song.songId && songData">
     {{ songData.vidTitle | decodeTitle }}
     <audio @canplaythrough="isReady"
            @timeupdate="timeUpdate"
            preload="auto" ref="audio" v-if="srcReady" :src="srcURL"></audio>
-    <span class="badge badge-primary badge-pill">{{ song.votes }}</span>
+    <span class="badge badge-primary badge-pill">{{ voteCount }}</span>
     <b-progress :value="songCurrentTime" :max="songDuration" v-if="playing"></b-progress>
-    <span class="time">{{ songCurrentTime | moment('mm:ss') }} / {{ songDuration | moment('mm:ss') }}</span>
+    <span class="time">{{ songCurrentTime }} / {{ songDuration | moment('mm:ss') }}</span>
     <b-button v-if="ready" @click="play">Play</b-button>
   </li>
 </template>
@@ -23,13 +23,20 @@
 
 export default {
   name: 'SongElement',
-  props: ['song', 'playing', 'voteable','uuid'],
+  props: ['song', 'playing', 'voteable','uuid', 'partyId'],
   data () {
     return {
       voted: false,
       songCurrentTime: 0,
       songDuration: 0,
-      ready: false
+      ready: false,
+      voteCount: 0
+    }
+  },
+  mounted () {
+    this.voteCount = this.song.votes; //TODO
+    this.$options.sockets[`${this.partyId}/${this.song.songId}/voteCount`] = (response) => {
+      this.voteCount = response.voteCount
     }
   },
   filters: {
@@ -51,17 +58,9 @@ export default {
     vote () {
       if (this.voteable) {
         if(this.voted) {
-          this.axios.get("/voteSong?partyId=" + this.partyid +
-          "&songId="+this.song.url+ "&userId="+this.uuid)
-          .then(response => {
-            console.log("no yo")
-          })
+          this.$socket.emit('/unvoteSong', { partyId: this.partyId, songId: this.song.songId, userId: this.uuid })
         } else {
-          this.axios.get("/voteSong?partyId=" + this.partyid +
-          "&songId="+this.song.url+ "&userId="+this.uuid)
-          .then(response => {
-            console.log("yo")
-          })
+          this.$socket.emit('/voteSong', { partyId: this.partyId, songId: this.song.songId, userId: this.uuid })
         }
         this.voted = !this.voted;
         console.log(this.voted)
@@ -85,15 +84,16 @@ export default {
     },
     srcURL () {
       return this.srcReady ? this.songData.vidInfo['3'].dloadUrl : "";
+      //return "http://9141937e.ngrok.io/testAudio";
     }
   },
   asyncComputed: {
     songData () {
       return this.axios.get(
-        "https://youtubemp3api.com/@api/json/mp3/" + this.song.url)
+        "https://youtubemp3api.com/@api/json/mp3/" + this.song.songId)
         .then(response => response.data)
     }
-  },
+  }
 }
 </script>
 

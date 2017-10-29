@@ -9,7 +9,9 @@ import 'bootstrap/dist/css/bootstrap.css'
 import AsyncComputed from 'vue-async-computed'
 import axios from 'axios'
 import VueAxios from 'vue-axios'
+import VueSocketio from "vue-socket.io"
 
+Vue.use(VueSocketio, "ws://localhost:30000")
 Vue.use(require('vue-moment'))
 Vue.use(VueAxios, axios)
 Vue.use(AsyncComputed)
