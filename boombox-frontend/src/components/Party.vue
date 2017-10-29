@@ -3,10 +3,11 @@
     <div class="container text-center">
       <h3>Welcome to {{ partyName }}</h3>
       <h4>{{ partyId }}</h4>
+      <b-button @click="songFinish">POP</b-button>
       <br>
       <ul class="list-group">
         <li class="list-group-item list-header">Now Playing</li>
-        <SongElement :songId="playingNow.songId" :uuid="uuid" :voteable="false" :partyId="partyId" :playing="true"></SongElement>
+        <SongElement :songId="playingNow.songId" :time="playingNow.time":uuid="uuid" :voteable="false" :partyId="partyId" :playing="true"></SongElement>
         <li class="list-group-item list-header">Up Next</li>
         <SongElement :songId="playingNext.songId" :uuid="uuid" :voteable="false" :partyId="partyId" :playing="false"></SongElement>
       </ul>
@@ -57,6 +58,9 @@ export default {
     }
   },
   methods: {
+    songFinish () {
+      this.$socket.emit('songFinish', { partyId: this.partyId , songId: this.playingNow.songId})
+    },
     updateVoteCount (id, votes) {
       console.log("id:"+id+" votes:"+votes)
       this.songqueue.find((element) => element.songId == id).voteCount = votes;

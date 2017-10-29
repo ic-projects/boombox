@@ -14,7 +14,7 @@
     <span class="badge badge-primary badge-pill">{{ voteCount }}</span>
     <b-progress :value="songCurrentTime" :max="songDuration" v-if="playing"></b-progress>
     <span class="time" v-if="playing">{{ songCurrentTime }} / {{ songDuration | moment('mm:ss') }}</span>
-    <b-button v-if="ready" @click="play">Play</b-button>
+    <b-button v-if="ready">Ready</b-button>
   </li>
 </template>
 
@@ -23,7 +23,7 @@
 
 export default {
   name: 'SongElement',
-  props: ['songId', 'playing', 'voteCount', 'voteable','uuid', 'partyId'],
+  props: ['songId', 'playing', 'voteCount', 'voteable','uuid', 'partyId', 'time'],
   data () {
     return {
       voted: false,
@@ -32,11 +32,7 @@ export default {
       ready: false
     }
   },
-  mounted () {
-    this.$options.sockets[`${this.partyId}/${this.songId}/songListVote`] = (response) => {
-      this.$parent.updateVoteCount(this.songId, response.votes)
-    }
-  },
+
   filters: {
     decodeTitle: function(title) {
       return he.decode(title)
@@ -52,6 +48,9 @@ export default {
       console.log(music.duration)
       this.songDuration = music.duration
       this.songCurrentTime = music.currentTime
+      if(this.songCurrentTime - this.songDuration < 1) {
+        this.$socket.emit('finishSong', { partyId: this.partyId, songId: this.songId})
+      }
     },
     vote () {
       if (this.voteable) {
@@ -82,15 +81,58 @@ export default {
     },
     srcURL () {
       return this.srcReady ? this.songData.vidInfo['3'].dloadUrl : "";
-      //return "http://9141937e.ngrok.io/testAudio";
+      //return "http://bb03797f.ngrok.io/"++".mp3";
+    }
+  },
+  sockets: {
+    downloadNextSong(response) {
+      let music = this.$refs.audio
+      if(!this.playing && !this.voteable) {
+          music.load()
+      }
+    },
+    getReady(response) {
+      if(this.songId == response.songId) {
+        let music = this.$refs.audio
+        setTimeout(() => {
+          music.play();
+        }, response.time - window.ts.now())
+      }
     }
   },
   asyncComputed: {
     songData () {
       return this.axios.get(
-        "https://youtubemp3api.com/@api/json/mp3/" + this.songId)
+        "https://db221a2e.ngrok.io/" + this.songId + ".mp3")
         .then(response => response.data)
     }
+  },
+  watch: {
+    time: function(newTime) {
+      console.log(newTime)
+      console.log(Date.now())
+      if(newTime > Date.now()) {
+        console.log("starting timer for "+newTime - Date.now())
+        setTimeout(() => {
+          if(this.playing && this.songId) {
+            console.log("PLAYED")
+            let music = this.$refs.audio
+            music.play();
+        }
+        }, newTime - Date.now())
+      } else {
+        console.log("missed start time")
+      }
+    }
+  },
+  mounted () {
+      this.$options.sockets[`${this.partyId}/${this.songId}/songListVote`] = (response) => {
+        this.$parent.updateVoteCount(this.songId, response.votes)
+      }
+
+
+
+
   }
 }
 </script>

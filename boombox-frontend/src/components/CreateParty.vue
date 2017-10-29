@@ -41,6 +41,7 @@ export default {
     createdParty(response) {
       console.log(response);
       let newPartyID = response.newPartyId
+      let start = response.timeOfStart
       this.$router.push("party/"+newPartyID);
     }
   }

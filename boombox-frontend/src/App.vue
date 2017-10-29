@@ -9,6 +9,12 @@
 </template>
 
 <script>
+var timesync = require('timesync')
+/*window.ts = timesync.create({
+  server: '/timesync',
+  interval: 100000
+})*/
+
 export default {
   name: 'app'
 }

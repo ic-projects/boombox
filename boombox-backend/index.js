@@ -173,6 +173,12 @@ io.on('connection', function(client) {
             'songs.songId': {
                 '$ne': data.songId
             },
+            'currentSong': {
+                '$ne': data.songId
+            },
+            'nextSong': {
+                '$ne': data.songId
+            },
         }, [], {
             '$push': {
                 'songs': {
@@ -205,10 +211,11 @@ io.on('connection', function(client) {
       }
 
       if(noCur && noNext) {
+        console.log('Case 1');
         let nextSong = party.songs.reduce((a, b) => {
           return a.voterIds.length >= b.voterIds.length ? a : b
-        },{voterIds: []})
-        if(nextSong) {
+        },{voterIds: {length: -1}})
+        if(nextSong && nextSong.songId) {
           removeSongAdmin(nextSong.songId, id)
           for (var i = party.songs.length - 1; i >= 0; --i) {
               if (party.songs[i].songId == nextSong.songId) {
@@ -229,7 +236,7 @@ io.on('connection', function(client) {
         nextSong = party.songs.reduce((a, b) => {
           return a.voterIds.length >= b.voterIds.length ? a : b
         },{voterIds: {length: -1}})
-        if(nextSong) {
+        if(nextSong && nextSong.songId) {
           removeSongAdmin(nextSong.songId, id)
           let nextSongStartTime = getSongDuration(party.currentSong) + party.currentSongStartTime + 1000
           await parties.findAndModify({
@@ -243,18 +250,19 @@ io.on('connection', function(client) {
         }
 
       } else if(noCur) {
+        console.log('Case 2');
         await parties.findAndModify({
             'partyId': id
           }, [], {
             '$set': {
               'currentSong': party.nextSong,
-              'currentSongStartTime': (new Date()) + 1000 * 10,
+              'currentSongStartTime': Date.now() + 1000 * 30,
               'currentSongVoteCount': party.nextSongVoteCount,}
           })
         let nextSong = party.songs.reduce((a, b) => {
           return a.voterIds.length >= b.voterIds.length ? a : b
         },{voterIds: {length: -1}})
-        if(nextSong) {
+        if(nextSong && nextSong.songId) {
           removeSongAdmin(nextSong.songId, id)
           let nextSongStartTime = previousNextSongStartTime + getSongDuration(nextSong.songId) + new Date()
           await parties.findAndModify({
@@ -268,10 +276,11 @@ io.on('connection', function(client) {
         }
 
       } else if(noNext) {
+        console.log('Case 3');
         let nextSong = party.songs.reduce((a, b) => {
           return a.voterIds.length >= b.voterIds.length ? a : b
         },{voterIds: {length: -1}})
-        if(nextSong) {
+        if(nextSong && nextSong.songId) {
           removeSongAdmin(nextSong.songId, id)
           await parties.findAndModify({
               'partyId': id
@@ -335,6 +344,19 @@ io.on('connection', function(client) {
             })
         }
     }
+
+    client.on('songFinish', async function(data) {
+      await parties.findAndModify({
+          'partyId': data.partyId,
+          'currentSong': data.songId,
+        }, [], {
+          '$set': {
+            'currentSong': '',
+            'currentSongStartTime': 0,
+            'currentSongVoteCount': 0,}
+        })
+        checkQueue(data.partyId)
+    })
 
     client.on('removeSong', async function(data) {
         let songList = await parties.findAndModify({

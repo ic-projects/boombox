@@ -30,17 +30,11 @@ export default {
   data () {
     return {
       partyid: '',
-      testBuffer: []
     }
   },
   methods: {
     joinParty () {
       this.$router.push("party/" + this.partyid)
-    }
-  },
-  sockets: {
-    downloadNextSong(data) {
-      testBuffer.push(data)
     }
   }
 }
