@@ -2,9 +2,12 @@
   <div>
     <div class="container text-center">
       <h3>Welcome to {{ partyName }}</h3>
+      <h4>{{ partyId }}</h4>
       <br>
       <ul class="list-group">
+        <li class="list-group-item list-header">Now Playing</li>
         <SongElement :songId="playingNow.songId" :uuid="uuid" :voteable="false" :partyId="partyId" :playing="true"></SongElement>
+        <li class="list-group-item list-header">Up Next</li>
         <SongElement :songId="playingNext.songId" :uuid="uuid" :voteable="false" :partyId="partyId" :playing="false"></SongElement>
       </ul>
       <br>
@@ -76,7 +79,16 @@ export default {
       this.songqueue.push({songId: response.songId, voteCount: 0})
       this.resortQueue()
     }
+    this.$options.sockets[`${this.partyId}/songListRemove`] = (response) => {
 
+      for (var i = this.songqueue.length - 1; i >= 0; --i) {
+          if (this.songqueue[i].songId == response.songId) {
+              this.songqueue.splice(i,1);
+              break;
+          }
+      }
+      this.resortQueue()
+    }
     this.joinParty()
   },
   sockets: {

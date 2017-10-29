@@ -13,7 +13,7 @@
            preload="auto" ref="audio" v-if="srcReady" :src="srcURL"></audio>
     <span class="badge badge-primary badge-pill">{{ voteCount }}</span>
     <b-progress :value="songCurrentTime" :max="songDuration" v-if="playing"></b-progress>
-    <span class="time">{{ songCurrentTime }} / {{ songDuration | moment('mm:ss') }}</span>
+    <span class="time" v-if="playing">{{ songCurrentTime }} / {{ songDuration | moment('mm:ss') }}</span>
     <b-button v-if="ready" @click="play">Play</b-button>
   </li>
 </template>

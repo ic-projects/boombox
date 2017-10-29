@@ -154,7 +154,75 @@ io.on('connection', function(client) {
                 'songId': data.songId,
             })
         }
+
+        await checkQueue(data.partyId)
     });
+
+    async function checkQueue(id) {
+      let party = await parties.findOne({
+        'partyId': id
+      })
+
+      let noCur = (party.currentSongStartTime === 0)
+      let noNext = (party.nextSongStartTime === 0)
+
+      if(noCur && noNext) {
+        let nextSong = party.songs.reduce((a, b) => {
+          return a.voterIds.length >= b.voterIds.length ? a : b
+        })
+        if(nextSong) {
+          removeSongAdmin(nextSong.songId, id)
+          //TODO insert nextSong as cur
+        }
+
+        nextSong = party.songs.reduce((a, b) => {
+          return a.voterIds.length >= b.voterIds.length ? a : b
+        })
+        if(nextSong) {
+          removeSongAdmin(nextSong.songId, id)
+          //TODO insert nextSong as next
+        }
+
+      } else if(noCur) {
+        //TODO insert next as cur
+        let nextSong = party.songs.reduce((a, b) => {
+          return a.voterIds.length >= b.voterIds.length ? a : b
+        })
+        if(nextSong) {
+          removeSongAdmin(nextSong.songId, id)
+          //TODO insert nextSong as next
+        }
+
+      } else if(noNext) {
+        let nextSong = party.songs.reduce((a, b) => {
+          return a.voterIds.length >= b.voterIds.length ? a : b
+        })
+        if(nextSong) {
+          removeSongAdmin(nextSong.songId, id)
+          //TODO insert nextSong as next
+        }
+
+      }
+    }
+
+    async function removeSongAdmin(songId, partyId) {
+        let songList = await parties.findAndModify({
+            'partyId': partyId,
+            'songs.songId': songId,
+        }, [], {
+            '$pull': {
+                'songs': {
+                    'songId': songId,
+                }
+            },
+        });
+
+        if (songList.value) {
+            io.emit(partyId + '/songListRemove', {
+                'songId': songId,
+            })
+        }
+    }
 
     client.on('removeSong', async function(data) {
         let songList = await parties.findAndModify({
@@ -174,7 +242,7 @@ io.on('connection', function(client) {
                 'songId': data.songId,
             })
         }
-    });
+    })
 
     client.on('voteSong', async function(data) {
         let songList = await parties.findAndModify({
