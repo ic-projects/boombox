@@ -1,178 +1,178 @@
+
+
 <!DOCTYPE html>
 <html>
-<head>
-  <!-- note: for support on older browsers, you will need to load es5-shim and es6-shim -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/es5-shim/4.0.5/es5-shim.min.js"></script> 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.23.0/es6-shim.min.js"></script> 
- 
-  <script src="/timesync/timesync.js"></script> 
-	<script src="https://code.jquery.com/jquery-1.10.2.js"></script>
-  <script src="/socket.io/socket.io.js"></script>            
-	<script>
-	  // create a timesync instance
-	  var ts = timesync.create({
-	    server: "/timesync",
-	    interval: 10000
-	  });
-	  
-	  var OFFSET = 0;
-
-	  var socket = io.connect("http://localhost:30000");
-	  socket.on("connection", function(data) {
-	  	console.log("successfully connected to the browser")
-	  });
-	 
-	  // get notified on changes in the offset
-	  ts.on("change", function (offset) {
-	  	OFFSET = offset;
-	  	console.log("OFFSET: ", OFFSET);
-	  });
-	 
-	  function submitConnection(event) {
-	    document.getElementById("waiting").style.color = "black";
-	    document.getElementById("fs").style.color = "white";
-	    document.getElementById("ff").style.color = "white";
-	    socket.emit("join", "Add me please");
-	  }
-
-	  var countdown;
-
-	  socket.on("getReady", function(data) {
-			countdown = Math.trunc((data.time - ts.now() ) / 1000 );
-	  	let hashInterval = setInterval(function(){ console.log(countdown); countdown--; }, 1000);
-	  	setTimeout(function (hashInterval) {clearInterval()}, 60000);
-	  	setTimeout(function () {
-	  		document.getElementById("boom").style.color = "red";
-	  		document.getElementById("waiting").style.color = "white";
-	  	}, data.time - ts.now())
-	  });
-
-
-	  function createParty(name) {
-	  	socket.emit("createParty", {
-	  		"name": name
-	  	});
-	  }
-	  function joinParty(partyId) {
-	  	socket.emit("joinParty", {
-	  		"partyId": partyId
-	  	});
-	  }
-	  function gotNextSong(partyId) {
-	  	socket.emit("gotNextSong", {
-	  		"partyId": partyId
-	  	});
-	  }
-	  function addSong(partyId, userId, songId) {
-	  	socket.emit("addSong", {
-	  		"partyId": partyId,
-	  		"userId": userId,
-	  		"songId": songId,
-	  	});
-	  }
-	  function removeSong(partyId, userId, songId) {
-	  	socket.emit("removeSong", {
-	  		"partyId": partyId,
-	  		"userId": userId,
-	  		"songId": songId,
-	  	});
-	  }
-	  function voteSong(partyId, userId, songId) {
-	  	socket.emit("voteSong", {
-	  		"partyId": partyId,
-	  		"userId": userId,
-	  		"songId": songId,
-	  	});
-	  }
-	  function unvoteSong(partyId, userId, songId) {
-	  	socket.emit("unvoteSong", {
-	  		"partyId": partyId,
-	  		"userId": userId,
-	  		"songId": songId,
-	  	});
-	  }
-
-	  socket.on("createdParty", function (data) {
-	  	console.log(data);
-	  });
-	  socket.on("joinedParty", function (data) {
-	  	console.log(data);
-	  });
-	  socket.on("gotNextSong", function (data) {
-	  	console.log(data);
-	  });
-	  socket.on("addedSong", function (data) {
-	  	console.log(data);
-	  });
-	  socket.on("removedSong", function (data) {
-	  	console.log(data);
-	  });
-	  socket.on("votedSong", function (data) {
-	  	console.log(data);
-	  });
-	  socket.on("unvotedSong", function (data) {
-	  	console.log(data);
-	  });
-	</script> 
-</head>
-<body>
-
-	<h1 id="boom" style="color:white">BOOM</h1>
-	<h2 id="waiting" style="color:white">Waiting....</h2>
-	<form action="JavaScript:submitConnection()">
-	  <input id="fs" type="submit" value="join">
-	</form>
-	<form action="JavaScript:createParty(document.getElementById('name').value)">
-	  <input id="name" type="text" value="name">
-	  <input type="submit" value="createParty">
-	</form>
-	<form action="JavaScript:joinParty(document.getElementById('partyId1').value)">
-	  <input id="partyId1" type="text" value="partyId">
-	  <input type="submit" value="joinParty">
-	</form>
-	<form action="JavaScript:getNextSong(document.getElementById('partyId2').value)">
-	  <input id="partyId2" type="text" value="partyId">
-	  <input type="submit" value="getNextSong">
-	</form>
-	<form action="JavaScript:addSong(
-		document.getElementById('partyId3').value,
-		document.getElementById('userId3').value,
-		document.getElementById('songId3').value
-	)">
-	  <input id="partyId3" type="text" value="partyId">
-	  <input id="userId3" type="text" value="userId">
-	  <input id="songId3" type="text" value="songId">
-	  <input type="submit" value="addSong">
-	</form>
-	<form action="JavaScript:removeSong(
-		document.getElementById('partyId4').value,
-		document.getElementById('userId4').value,
-		document.getElementById('songId4').value
-	)">
-	  <input id="partyId4" type="text" value="partyId">
-	  <input id="userId4" type="text" value="userId">
-	  <input id="songId4" type="text" value="songId">
-	  <input type="submit" value="removeSong">
-	</form>
-	<form action="JavaScript:voteSong(
-		document.getElementById('partyId5').value,
-		document.getElementById('userId5').value,
-		document.getElementById('songId5').value
-	)">
-	  <input id="partyId5" type="text" value="partyId">
-	  <input id="userId5" type="text" value="userId">
-	  <input id="songId5" type="text" value="songId">
-	  <input type="submit" value="voteSong">
-	</form>
-	<form action="JavaScript:unvoteSong(
-		document.getElementById('partyId6').value,
-		document.getElementById('userId6').value,
-		document.getElementById('songId6').value
-	)">
-	  <input id="partyId6" type="text" value="partyId">
-	  <input id="userId6" type="text" value="userId">
-	  <input id="songId6" type="text" value="songId">
-	  <input type="submit" value="unvoteSong">
-	</form>
-</body>
+  <head>
+    <!-- note: for support on older browsers, you will need to load es5-shim and es6-shim -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es5-shim/4.0.5/es5-shim.min.js"></script> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.23.0/es6-shim.min.js"></script> 
+    <script src="/timesync/timesync.js"></script> 
+    <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
+    <script src="/socket.io/socket.io.js"></script>            
+    <script>
+      // create a timesync instance
+      var ts = timesync.create({
+        server: "/timesync",
+        interval: 10000
+      });
+      
+      var OFFSET = 0;
+      
+      var socket = io.connect("http://localhost:30000");
+      socket.on("connection", function(data) {
+      	console.log("successfully connected to the browser")
+      });
+      
+      // get notified on changes in the offset
+      ts.on("change", function (offset) {
+      	OFFSET = offset;
+      	console.log("OFFSET: ", OFFSET);
+      });
+      
+      function submitConnection(event) {
+        document.getElementById("waiting").style.color = "black";
+        document.getElementById("fs").style.color = "white";
+        document.getElementById("ff").style.color = "white";
+        socket.emit("join", "Add me please");
+      }
+      
+      var countdown;
+      
+      socket.on("getReady", function(data) {
+      countdown = Math.trunc((data.time - ts.now() ) / 1000 );
+      	let hashInterval = setInterval(function(){ console.log(countdown); countdown--; }, 1000);
+      	setTimeout(function (hashInterval) {clearInterval()}, 60000);
+      	setTimeout(function () {
+      		document.getElementById("boom").style.color = "red";
+      		document.getElementById("waiting").style.color = "white";
+      	}, data.time - ts.now())
+      });
+      
+      
+      function createParty(name) {
+      	socket.emit("createParty", {
+      		"name": name
+      	});
+      }
+      function joinParty(partyId) {
+      	socket.emit("joinParty", {
+      		"partyId": partyId
+      	});
+      }
+      function gotNextSong(partyId) {
+      	socket.emit("gotNextSong", {
+      		"partyId": partyId
+      	});
+      }
+      function addSong(partyId, userId, songId) {
+      	socket.emit("addSong", {
+      		"partyId": partyId,
+      		"userId": userId,
+      		"songId": songId,
+      	});
+      }
+      function removeSong(partyId, userId, songId) {
+      	socket.emit("removeSong", {
+      		"partyId": partyId,
+      		"userId": userId,
+      		"songId": songId,
+      	});
+      }
+      function voteSong(partyId, userId, songId) {
+      	socket.emit("voteSong", {
+      		"partyId": partyId,
+      		"userId": userId,
+      		"songId": songId,
+      	});
+      }
+      function unvoteSong(partyId, userId, songId) {
+      	socket.emit("unvoteSong", {
+      		"partyId": partyId,
+      		"userId": userId,
+      		"songId": songId,
+      	});
+      }
+      
+      socket.on("createdParty", function (data) {
+      	console.log(data);
+      });
+      socket.on("joinedParty", function (data) {
+      	console.log(data);
+      });
+      socket.on("gotNextSong", function (data) {
+      	console.log(data);
+      });
+      socket.on("addedSong", function (data) {
+      	console.log(data);
+      });
+      socket.on("removedSong", function (data) {
+      	console.log(data);
+      });
+      socket.on("votedSong", function (data) {
+      	console.log(data);
+      });
+      socket.on("unvotedSong", function (data) {
+      	console.log(data);
+      });
+    </script> 
+  </head>
+  <body>
+    <h1 id="boom" style="color:white">BOOM</h1>
+    <h2 id="waiting" style="color:white">Waiting....</h2>
+    <form action="JavaScript:submitConnection()">
+      <input id="fs" type="submit" value="join">
+    </form>
+    <form action="JavaScript:createParty(document.getElementById('name').value)">
+      <input id="name" type="text" value="name">
+      <input type="submit" value="createParty">
+    </form>
+    <form action="JavaScript:joinParty(document.getElementById('partyId1').value)">
+      <input id="partyId1" type="text" value="partyId">
+      <input type="submit" value="joinParty">
+    </form>
+    <form action="JavaScript:getNextSong(document.getElementById('partyId2').value)">
+      <input id="partyId2" type="text" value="partyId">
+      <input type="submit" value="getNextSong">
+    </form>
+    <form action="JavaScript:addSong(
+      document.getElementById('partyId3').value,
+      document.getElementById('userId3').value,
+      document.getElementById('songId3').value
+      )">
+      <input id="partyId3" type="text" value="partyId">
+      <input id="userId3" type="text" value="userId">
+      <input id="songId3" type="text" value="songId">
+      <input type="submit" value="addSong">
+    </form>
+    <form action="JavaScript:removeSong(
+      document.getElementById('partyId4').value,
+      document.getElementById('userId4').value,
+      document.getElementById('songId4').value
+      )">
+      <input id="partyId4" type="text" value="partyId">
+      <input id="userId4" type="text" value="userId">
+      <input id="songId4" type="text" value="songId">
+      <input type="submit" value="removeSong">
+    </form>
+    <form action="JavaScript:voteSong(
+      document.getElementById('partyId5').value,
+      document.getElementById('userId5').value,
+      document.getElementById('songId5').value
+      )">
+      <input id="partyId5" type="text" value="partyId">
+      <input id="userId5" type="text" value="userId">
+      <input id="songId5" type="text" value="songId">
+      <input type="submit" value="voteSong">
+    </form>
+    <form action="JavaScript:unvoteSong(
+      document.getElementById('partyId6').value,
+      document.getElementById('userId6').value,
+      document.getElementById('songId6').value
+      )">
+      <input id="partyId6" type="text" value="partyId">
+      <input id="userId6" type="text" value="userId">
+      <input id="songId6" type="text" value="songId">
+      <input type="submit" value="unvoteSong">
+    </form>
+  </body>
 </html>
