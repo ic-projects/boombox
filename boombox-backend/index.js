@@ -1,15 +1,14 @@
+var MongoClient = require('mongodb').MongoClient;
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
-var MongoClient = require('mongodb').MongoClient;
-var co = require('co');
-var assert = require('assert');
-var uuidv4 = require('uuid/v4');
 var io = require('socket.io')(http);
 const decoder = require('lame').Decoder
 var path = require('path');
+var uuidv4 = require('uuid/v4');
 var stream = require('youtube-audio-stream');
 var timesyncServer = require('timesync/server');
+
 app.use('/timesync', timesyncServer.requestHandler);
 
 app.get('/testAudio', function(req, res) {
@@ -40,7 +39,6 @@ io.on("connection", function(client) {
     });
 });
 
-
 app.get('/sync', function(req, res) {
     STARTOFNEXTSONG = new Date().getTime() + 15000
 	io.emit("getReady", {time: STARTOFNEXTSONG})
@@ -51,7 +49,6 @@ app.get('/sync', function(req, res) {
 app.use(express.static(path.join(__dirname, 'public')));
 
 let init = async function() {
-    // Setup MongoDB database
     var db = await MongoClient.connect('mongodb://localhost:27017/boombox');
     console.log('Connected correctly to server');
 
@@ -60,22 +57,38 @@ let init = async function() {
         name: 'parties'
     }).toArray();
     if (partiesCollections.length == 0) {
-        var parties = await db.createCollection('parties');
+        parties = await db.createCollection('parties');
         console.log('Created parties collection');
     } else {
-        var parties = db.collection('parties');
+        parties = db.collection('parties');
         console.log('Found parties collection');
     }
+}
 
-    /**
-     * GET Paremeters:
-     *  - name
-     */
-    var getCreateParty = async function(req, res) {
+// Setup mongoDB
+var parties;
+init();
+
+// Setup timesync
+var timesyncServer = require('timesync/server');
+app.use('/timesync', timesyncServer.requestHandler);
+var START_OF_NEXT_SONG = undefined;
+
+// Listen on sockets'
+io.on('connection', function(client) {
+    client.on('join', function(data) {
+        if (START_OF_NEXT_SONG != undefined) {
+            client.emit('getReady', {
+                nextSong: START_OF_NEXT_SONG,
+            });
+        }
+    });
+
+    client.on('createParty', async function(data) {
         let newPartyId = Math.random().toString(36).substring(6);
         await parties.insertOne({
             'partyId': newPartyId,
-            'name': req.query.name,
+            'name': data.name,
             'currentSong': '',
             'currentSongStartTime': 0,
             'nextSong': '',
@@ -83,189 +96,159 @@ let init = async function() {
             'songs': [],
             'users': [],
         });
-        res.send(newPartyId);
-    }
 
-    /**
-     * GET Paremeters:
-     *  - partyId
-     */
-    var getJoinParty = async function(req, res) {
+        client.emit('createdParty', {
+            'newPartyId': newPartyId,
+        });
+    });
+
+    client.on('joinParty', async function(data) {
         uuid = uuidv4();
-
-        let party = await parties.findAndModify({
-            'partyId': req.query.partyId,
+        let songList = await parties.findAndModify({
+            'partyId': data.partyId,
         }, [], {
             '$push': {
                 'users': uuid
             }
         });
 
-        res.send({
+        client.emit('joinedParty', {
             'uuid': uuid,
-            'name': party.value.name,
+            'party': songList.value,
         });
-    }
+    });
 
-    /**
-     * GET Parameters:
-     *  - partyId
-     */
-    var getSongList = async function(req, res) {
-        let songList = await parties.findOne({
-            'partyId': req.query.partyId,
-        });
-        res.send(songList);
-    }
-
-    /**
-     * GET Parameters:
-     *  - partyId
-     */
-    var getNextSong = async function(req, res) {
+    client.on('getNextSong', async function(data) {
         let nextSong = await parties.findOne({
-            'partyId': req.query.partyId,
+            'partyId': data.partyId,
         }, {
             'fields': {
                 'nextSong': 1,
                 'nextSongStartTime': 1,
             },
         });
-        res.send(nextSong);
-    }
 
-    /**
-     * GET Parameters:
-     *  - partyId
-     *  - songId
-     *  - userId
-     */
-    var getAddSong = async function(req, res) {
+        client.emit('gotNextSong', nextSong.value);
+    });
+
+    client.on('addSong', async function(data) {
         let songList = await parties.findAndModify({
-            'partyId': req.query.partyId,
+            'partyId': data.partyId,
             'songs.songId': {
-                '$ne': req.query.songId
+                '$ne': data.songId
             },
         }, [], {
             '$push': {
                 'songs': {
-                    'songId': req.query.songId,
-                    'userId': req.query.userId,
+                    'songId': data.songId,
+                    'userId': data.userId,
                     'voterIds': [],
                 }
             },
         });
 
         if (songList.value) {
-            res.send(true);
+            client.emit('addedSong', {
+                'success': true,
+            });
         } else {
-            res.send(false);
+            client.emit('addedSong', {
+                'success': false,
+            });
         }
-    }
+    });
 
-    /**
-     * GET Parameters:
-     *  - partyId
-     *  - songId
-     *  - userId
-     */
-    var getRemoveSong = async function(req, res) {
+    client.on('removeSong', async function(data) {
         let songList = await parties.findAndModify({
-            'partyId': req.query.partyId,
-            'songs.songId': req.query.songId,
-            'songs.userId': req.query.userId,
+            'partyId': data.partyId,
+            'songs.songId': data.songId,
+            'songs.userId': data.userId,
         }, [], {
             '$pull': {
                 'songs': {
-                    'songId': req.query.songId,
+                    'songId': data.songId,
                 }
             },
         });
 
         if (songList.value) {
-            res.send(true);
+            client.emit('removedSong', {
+                'success': true,
+            });
         } else {
-            res.send(false);
+            client.emit('removedSong', {
+                'success': false,
+            });
         }
-    }
+    });
 
-    /**
-     * GET Parameters:
-     *  - partyId
-     *  - songId
-     *  - userId
-     */
-    var getVoteSong = async function(req, res) {
+    client.on('voteSong', async function(data) {
         let songList = await parties.findAndModify({
-            'partyId': req.query.partyId,
+            'partyId': data.partyId,
             'songs': {
                 '$elemMatch': {
                     '$and': [{
-                        'songId': req.query.songId,
+                        'songId': data.songId,
                     }, {
                         'voterIds': {
-                            '$ne': req.query.userId,
+                            '$ne': data.userId,
                         },
                     }]
                 },
             },
         }, [], {
             '$push': {
-                'songs.$.voterIds': req.query.userId,
+                'songs.$.voterIds': data.userId,
             },
         });
 
         if (songList.value) {
-            res.send(true);
+            client.emit('votedSong', {
+                'success': true,
+            });
         } else {
-            res.send(false);
+            client.emit('votedSong', {
+                'success': false,
+            });
         }
-    }
+    });
 
-    /**
-     * GET Parameters:
-     *  - partyId
-     *  - songId
-     *  - userId
-     */
-    var getUnvoteSong = async function(req, res) {
+    client.on('unvoteSong', async function(data) {
         let songList = await parties.findAndModify({
-            'partyId': req.query.partyId,
+            'partyId': data.partyId,
             'songs': {
                 '$elemMatch': {
                     '$and': [{
-                        'songId': req.query.songId,
+                        'songId': data.songId,
                     }, {
-                        'voterIds': req.query.userId,
+                        'voterIds': data.userId,
                     }]
                 },
             },
         }, [], {
             '$pull': {
-                'songs.$.voterIds': req.query.userId,
+                'songs.$.voterIds': data.userId,
             },
         });
 
         if (songList.value) {
-            res.send(true);
+            client.emit('unvotedSong', {
+                'success': true,
+            });
         } else {
-            res.send(false);
+            client.emit('unvotedSong', {
+                'success': false,
+            });
         }
-    }
-
-    // Handle API calls
-    app.get('/createParty', getCreateParty);
-    app.get('/joinParty', getJoinParty);
-    app.get('/songList', getSongList);
-    app.get('/nextSong', getNextSong);
-    app.get('/addSong', getAddSong);
-    app.get('/removeSong', getRemoveSong);
-    app.get('/voteSong', getVoteSong);
-    app.get('/unvoteSong', getUnvoteSong);
-}
-
-co(init).catch(function(err) {
-    console.log(err.stack);
+    });
 });
+
+// Testing 
+app.get('/sync', function(req, res) {
+    START_OF_NEXT_SONG = new Date().getTime() + 15000
+    io.emit('getReady', {time: START_OF_NEXT_SONG})
+    res.send(`30 seconds start now`)
+});
+app.use(express.static(path.join(__dirname, 'public')));
 
 http.listen(30000);
