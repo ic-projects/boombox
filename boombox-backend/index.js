@@ -205,10 +205,6 @@ io.on('connection', function(client) {
 
       let noCur = (party.currentSongStartTime === 0)
       let noNext = (party.nextSongStartTime === 0)
-      let previousNextSongStartTime = party.nextSongStartTime;
-      if (noNext) {
-        console.log("NO NEXT but timout should be 0 so OK");
-      }
 
       if(noCur && noNext) {
         console.log('Case 1');
@@ -228,7 +224,7 @@ io.on('connection', function(client) {
             }, [], {
               '$set': {
                 'currentSong': nextSong.songId,
-                'currentSongStartTime': previousNextSongStartTime,
+                'currentSongStartTime': Date.now() + 1000 * 30 ,
                 'currentSongVoteCount': nextSong.voterIds.length,}
             })
         }
@@ -238,13 +234,12 @@ io.on('connection', function(client) {
         },{voterIds: {length: -1}})
         if(nextSong && nextSong.songId) {
           removeSongAdmin(nextSong.songId, id)
-          let nextSongStartTime = getSongDuration(party.currentSong) + party.currentSongStartTime + 1000
           await parties.findAndModify({
               'partyId': id
             }, [], {
               '$set': {
                 'nextSong': nextSong.songId,
-                'nextSongStartTime': nextSongStartTime,
+                'nextSongStartTime': 1,
                 'nextSongVoteCount': nextSong.voterIds.length,}
             })
         }
@@ -264,13 +259,12 @@ io.on('connection', function(client) {
         },{voterIds: {length: -1}})
         if(nextSong && nextSong.songId) {
           removeSongAdmin(nextSong.songId, id)
-          let nextSongStartTime = previousNextSongStartTime + getSongDuration(nextSong.songId) + new Date()
           await parties.findAndModify({
               'partyId': id
             }, [], {
               '$set': {
                 'nextSong': nextSong.songId,
-                'nextSongStartTime': nextSongStartTime,
+                'nextSongStartTime': 1,
                 'nextSongVoteCount': nextSong.voterIds.length,}
             })
         }
@@ -299,30 +293,30 @@ io.on('connection', function(client) {
       })
 
 
-          var requestUrl = 'https://www.youtube.com/watch?v=' + party.nextSong
-          try {
-            let writable = fs.createWriteStream('public/' + party.nextSong + '.mp3');
-            writable.on('open', function(w) {
-                stream(requestUrl).pipe(writable)
-            })
-            writable.on('close', function(w) {
-              io.emit(id + '/queueUpdate', {
-                'playingNow': {'songId': party.currentSong, 'time': party.currentSongStartTime, 'voteCount': party.currentSongVoteCount},
-                'playingNext': {'songId': party.nextSong, 'time': party.nextSongStartTime, 'voteCount': party.nextSongVoteCount},
-              })
-              if (c
-                )
-              setTimeout(checkQueue(id), previousNextSongStartTime - 50000)
-            })
-        } catch (exception) {
-            console.log("in getting youtube stream")
-        }
+        //   var requestUrl = 'https://www.youtube.com/watch?v=' + party.nextSong
+        //   try {
+        //     let writable = fs.createWriteStream('public/' + party.nextSong + '.mp3');
+        //     writable.on('open', function(w) {
+        //         stream(requestUrl).pipe(writable)
+        //     })
+        //     writable.on('close', function(w) {
+        //       io.emit(id + '/queueUpdate', {
+        //         'playingNow': {'songId': party.currentSong, 'time': party.currentSongStartTime, 'voteCount': party.currentSongVoteCount},
+        //         'playingNext': {'songId': party.nextSong, 'time': party.nextSongStartTime, 'voteCount': party.nextSongVoteCount},
+        //       })
+        //       if (c
+        //         )
+        //       setTimeout(checkQueue(id), previousNextSongStartTime - 50000)
+        //     })
+        // } catch (exception) {
+        //     console.log("in getting youtube stream")
+        // }
 
-      // io.emit(id + '/queueUpdate', {
-      //   'playingNow': {'songId': party.currentSong, 'time': party.currentSongStartTime, 'voteCount': party.currentSongVoteCount},
-      //   'playingNext': {'songId': party.nextSong, 'time': party.nextSongStartTime, 'voteCount': party.nextSongVoteCount},
+      io.emit(id + '/queueUpdate', {
+        'playingNow': {'songId': party.currentSong, 'time': party.currentSongStartTime, 'voteCount': party.currentSongVoteCount},
+        'playingNext': {'songId': party.nextSong, 'time': party.nextSongStartTime, 'voteCount': party.nextSongVoteCount},
 
-      // })
+      })
 
     }
 
