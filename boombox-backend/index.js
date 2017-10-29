@@ -16,7 +16,8 @@ app.get('/testAudio', function(req, res) {
 
 var STARTOFNEXTSONG = undefined
 
-    var requestUrl = 'https://www.youtube.com/watch?v=' + 'dQw4w9WgXcQ' // + req.query.songId
+function prepareAudio(youtubeCode) {
+    var requestUrl = 'https://www.youtube.com/watch?v=' + youtubeCode
     try {
         let writable = fs.createWriteStream('audio.mp3');
         writable.on('open', function(w) {
@@ -27,7 +28,9 @@ var STARTOFNEXTSONG = undefined
         })
     } catch (exception) {
     res.status(500).send("Oops could not get the song")
-  }
+    }
+}
+
 app.get('/sync', function(req, res) {
     STARTOFNEXTSONG = new Date().getTime() + 15000
 	io.emit("getReady", {time: STARTOFNEXTSONG})
