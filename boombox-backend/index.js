@@ -6,15 +6,21 @@ var co = require('co');
 var assert = require('assert');
 var uuidv4 = require('uuid/v4');
 var io = require('socket.io')(http);
+const decoder = require('lame').Decoder
 var path = require('path');
-
+var stream = require('youtube-audio-stream');
 var timesyncServer = require('timesync/server');
 app.use('/timesync', timesyncServer.requestHandler);
 
 app.get('/testAudio', function(req, res) {
-    var requestUrl = 'https://www.youtube.com/watch?v=' + req.query.songId
+    var requestUrl = 'https://www.youtube.com/watch?v=' + 'vK7JXuWLEr4' // + req.query.songId
     try {
-        stream(requestUrl).pipe(res)
+        let wstream = fs.createWriteStream('nextSong.mp3');
+        wstream.on('finish', function (wstream.write()) {
+             io.emit("DOWNLOAD GO!");
+        });
+        
+        stream(requestUrl).pipe(decoder()).pipe;
     } catch (exception) {
     res.status(500).send("Oops could not get the song")
   }
