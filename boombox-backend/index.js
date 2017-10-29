@@ -89,7 +89,7 @@ io.on('connection', function(client) {
             'users'               : [],
         });
 
-        client.emit(newPartyId + '/createdParty', {
+        client.emit('createdParty', {
             'newPartyId': newPartyId,
         });
     });
@@ -108,7 +108,7 @@ io.on('connection', function(client) {
             'uuid': uuid,
             'party': songList.value,
         });
-        io.sockets.emit()
+        io.emit(data.partyId + '/userListAdd');
     });
 
     client.on('getNextSong', async function(data) {
@@ -147,6 +147,9 @@ io.on('connection', function(client) {
             client.emit(data.partyId + '/addedSong', {
                 'success': true,
             });
+            io.emit(data.partyId + '/songListAdd', {
+                'songId': data.songId,
+            })
         } else {
             client.emit(data.partyId + '/addedSong', {
                 'success': false,
@@ -171,6 +174,9 @@ io.on('connection', function(client) {
             client.emit(data.partyId + '/removedSong', {
                 'success': true,
             });
+            io.emit(data.partyId + '/songListRemove', {
+                'songId': data.songId,
+            })
         } else {
             client.emit(data.partyId + '/removedSong', {
                 'success': false,
@@ -202,6 +208,10 @@ io.on('connection', function(client) {
             client.emit(data.partyId + '/votedSong', {
                 'success': true,
             });
+            io.emit(data.partyId + '/songListVote', {
+                'songId': data.songId,
+                'votes': songList.data.songs.voterIds.length + 1,
+            })
         } else {
             client.emit(data.partyId + '/votedSong', {
                 'success': false,
@@ -231,6 +241,10 @@ io.on('connection', function(client) {
             client.emit(data.partyId + '/unvotedSong', {
                 'success': true,
             });
+            io.emit(data.partyId + '/songListVote', {
+                'songId': data.songId,
+                'votes': songList.data.songs.voterIds.length - 1,
+            })
         } else {
             client.emit(data.partyId + '/unvotedSong', {
                 'success': false,
