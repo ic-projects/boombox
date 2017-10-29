@@ -62,9 +62,8 @@ io.on('connection', function(client) {
 
     client.on('joinParty', async function(data) {
         uuid = uuidv4();
-
         let songList = await parties.findAndModify({
-            'partyId': req.query.partyId,
+            'partyId': data.partyId,
         }, [], {
             '$push': {
                 'users': uuid
@@ -79,7 +78,7 @@ io.on('connection', function(client) {
 
     client.on('getNextSong', async function(data) {
         let nextSong = await parties.findOne({
-            'partyId': req.query.partyId,
+            'partyId': data.partyId,
         }, {
             'fields': {
                 'nextSong': 1,
@@ -92,15 +91,15 @@ io.on('connection', function(client) {
 
     client.on('addSong', async function(data) {
         let songList = await parties.findAndModify({
-            'partyId': req.query.partyId,
+            'partyId': data.partyId,
             'songs.songId': {
-                '$ne': req.query.songId
+                '$ne': data.songId
             },
         }, [], {
             '$push': {
                 'songs': {
-                    'songId': req.query.songId,
-                    'userId': req.query.userId,
+                    'songId': data.songId,
+                    'userId': data.userId,
                     'voterIds': [],
                 }
             },
@@ -119,13 +118,13 @@ io.on('connection', function(client) {
 
     client.on('removeSong', async function(data) {
         let songList = await parties.findAndModify({
-            'partyId': req.query.partyId,
-            'songs.songId': req.query.songId,
-            'songs.userId': req.query.userId,
+            'partyId': data.partyId,
+            'songs.songId': data.songId,
+            'songs.userId': data.userId,
         }, [], {
             '$pull': {
                 'songs': {
-                    'songId': req.query.songId,
+                    'songId': data.songId,
                 }
             },
         });
@@ -143,21 +142,21 @@ io.on('connection', function(client) {
 
     client.on('voteSong', async function(data) {
         let songList = await parties.findAndModify({
-            'partyId': req.query.partyId,
+            'partyId': data.partyId,
             'songs': {
                 '$elemMatch': {
                     '$and': [{
-                        'songId': req.query.songId,
+                        'songId': data.songId,
                     }, {
                         'voterIds': {
-                            '$ne': req.query.userId,
+                            '$ne': data.userId,
                         },
                     }]
                 },
             },
         }, [], {
             '$push': {
-                'songs.$.voterIds': req.query.userId,
+                'songs.$.voterIds': data.userId,
             },
         });
 
@@ -174,19 +173,19 @@ io.on('connection', function(client) {
 
     client.on('unvoteSong', async function(data) {
         let songList = await parties.findAndModify({
-            'partyId': req.query.partyId,
+            'partyId': data.partyId,
             'songs': {
                 '$elemMatch': {
                     '$and': [{
-                        'songId': req.query.songId,
+                        'songId': data.songId,
                     }, {
-                        'voterIds': req.query.userId,
+                        'voterIds': data.userId,
                     }]
                 },
             },
         }, [], {
             '$pull': {
-                'songs.$.voterIds': req.query.userId,
+                'songs.$.voterIds': data.userId,
             },
         });
 
