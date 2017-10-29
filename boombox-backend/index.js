@@ -16,16 +16,14 @@ var parseIsoDuration = require('parse-iso-duration');
 var STARTOFNEXTSONG = undefined
 
 function prepareAudio(youtubeCode) {
-    var requestUrl = 'https://www.youtube.com/watch?v=' + 'vK7JXuWLEr4'// + youtubeCode
+    var requestUrl = 'https://www.youtube.com/watch?v=' + youtubeCode
     try {
         let writable = fs.createWriteStream('public/' + youtubeCode + '.mp3');
         writable.on('open', function(w) {
             stream(requestUrl).pipe(writable)
         })
         writable.on('close', function(w) {
-           io.emit("test", {
-            songId: youtubeCode,
-           })
+            console.log("svaed")
         })
     } catch (exception) {
     res.status(500).send("Oops could not get the song")
@@ -33,7 +31,7 @@ function prepareAudio(youtubeCode) {
 }
 
 app.get('/testAudio', function (req, res) {
-    prepareAudio();
+    prepareAudio(req.query.songId);
     res.send("<h1>...</h1>")
 })
 
@@ -224,7 +222,7 @@ io.on('connection', function(client) {
             }, [], {
               '$set': {
                 'currentSong': nextSong.songId,
-                'currentSongStartTime': Date.now() + 1000 * 30 ,
+                'currentSongStartTime': Date.now() + 1000 * 10 ,
                 'currentSongVoteCount': nextSong.voterIds.length,}
             })
         }
@@ -251,19 +249,19 @@ io.on('connection', function(client) {
           }, [], {
             '$set': {
               'currentSong': party.nextSong,
-              'currentSongStartTime': Date.now() + 1000 * 30,
+              'currentSongStartTime': Date.now() + 1000 * 10,
               'currentSongVoteCount': party.nextSongVoteCount,}
           })
         let nextSong = party.songs.reduce((a, b) => {
           return a.voterIds.length >= b.voterIds.length ? a : b
         },{voterIds: {length: -1}})
-        if(nextSong && nextSong.songId) {
+        if(nextSong) {
           removeSongAdmin(nextSong.songId, id)
           await parties.findAndModify({
               'partyId': id
             }, [], {
               '$set': {
-                'nextSong': nextSong.songId,
+                'nextSong': nextSong.songId ? nextSong.songId : '',
                 'nextSongStartTime': 1,
                 'nextSongVoteCount': nextSong.voterIds.length,}
             })
@@ -340,6 +338,14 @@ io.on('connection', function(client) {
     }
 
     client.on('songFinish', async function(data) {
+        console.log("response", data);
+        let party = await parties.findOne({
+            'partyId': data.partyId
+        })
+        console.log("party", party)
+        if (party.currentSong !== data.songId) {
+            return;
+        }
       await parties.findAndModify({
           'partyId': data.partyId,
           'currentSong': data.songId,
@@ -431,6 +437,5 @@ app.get('/sync', function(req, res) {
     io.emit('getReady', {time: START_OF_NEXT_SONG})
     res.send(`30 seconds start now`)
 });
-app.use(express.static(path.join(__dirname, 'public')));
 
 http.listen(30000);
