@@ -32,7 +32,7 @@
       </b-form>
       <ul class="list-group" >
         <div v-for="song in searchresults" :key="song.id.videoId">
-          <SearchElement :songId="song.id.videoId" :songTitle="song.snippet.title"></SearchElement>
+          <SearchElement :uuid="uuid" :partyId="partyId" :songId="song.id.videoId" :songTitle="song.snippet.title"></SearchElement>
         </div>
       </ul>
       <br>

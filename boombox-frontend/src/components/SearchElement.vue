@@ -8,7 +8,7 @@
   var he = require('he');
 export default {
   name: 'SearchElement',
-  props: ['songId', 'songTitle'],
+  props: ['songId', 'songTitle', 'uuid', 'partyId'],
   methods: {
     addSong () {
       this.$socket.emit('addSong', { partyId: this.partyId, songId: this.songId, userId: this.uuid })
