@@ -225,6 +225,9 @@ io.on('connection', function(client) {
                 'currentSongStartTime': Date.now() + 1000 * 10 ,
                 'currentSongVoteCount': nextSong.voterIds.length,}
             })
+        setTimeout(() => {
+            io.emit(id + '/' + party.nextSong + '/play')
+        }, 15000)
         }
 
         nextSong = party.songs.reduce((a, b) => {
@@ -252,6 +255,10 @@ io.on('connection', function(client) {
               'currentSongStartTime': Date.now() + 1000 * 10,
               'currentSongVoteCount': party.nextSongVoteCount,}
           })
+        setTimeout(() => {
+            io.emit(id + '/' + party.nextSong + '/play')
+        }, 10000)
+
         let nextSong = party.songs.reduce((a, b) => {
           return a.voterIds.length >= b.voterIds.length ? a : b
         },{voterIds: {length: -1}})
@@ -338,11 +345,9 @@ io.on('connection', function(client) {
     }
 
     client.on('songFinish', async function(data) {
-        console.log("response", data);
         let party = await parties.findOne({
             'partyId': data.partyId
         })
-        console.log("party", party)
         if (party.currentSong !== data.songId) {
             return;
         }
